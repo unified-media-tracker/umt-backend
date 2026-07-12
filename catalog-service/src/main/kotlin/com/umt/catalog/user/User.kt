@@ -52,6 +52,16 @@ class User(
     @field:Column(name = UPDATED_AT_COLUMN, nullable = false)
     var updatedAt: Instant? = null
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return keycloakId == other.keycloakId
+    }
+
+    override fun hashCode(): Int {
+        return keycloakId.hashCode()
+    }
+
     companion object {
         const val TABLE_NAME = "\"user\""
         const val ID_COLUMN = "id"

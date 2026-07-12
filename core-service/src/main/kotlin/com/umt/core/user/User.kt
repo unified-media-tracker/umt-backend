@@ -13,7 +13,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.type.SqlTypes
 import java.util.UUID
-import kotlin.time.Instant
+import java.time.Instant
 
 enum class PlanTier {
     FREE, PREMIUM

@@ -8,7 +8,7 @@ plugins {
 
 group = "com.umt"
 version = "0.0.1-SNAPSHOT"
-description = "catalog-service"
+description = "core-service"
 
 java {
     toolchain {

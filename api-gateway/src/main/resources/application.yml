@@ -13,10 +13,10 @@ spring:
                 allowedHeaders: "*"
                 allowCredentials: true
           routes:
-            - id: catalog-service-route
-              uri: http://${CATALOG_SERVICE_HOST:localhost}:${CATALOG_SERVICE_PORT:8081}
+            - id: core-service-route
+              uri: http://${CORE_SERVICE_HOST:localhost}:${CORE_SERVICE_PORT:8081}
               predicates:
-                - Path=/api/catalog/**
+                - Path=/api/core/**
 
             - id: ai-analyser-route
               uri: http://${AI_ANALYSER_HOST:localhost}:${AI_ANALYSER_PORT:8082}

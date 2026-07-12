@@ -18,7 +18,7 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
                 exchanges
-                    .pathMatchers(HttpMethod.GET, "/api/catalog/media/**").permitAll()
+                    .pathMatchers(HttpMethod.GET, "/api/core/media/**").permitAll()
                     .anyExchange().authenticated()
             }
             .build()

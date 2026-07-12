@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/catalog_db
+    username: catalog
+    password: catalog
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate

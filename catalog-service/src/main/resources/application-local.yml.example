@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/catalog_db
-    username: catalog
-    password: catalog
+    url: jdbc:postgresql://localhost:5432/core_db
+    username: core
+    password: core
 
   jpa:
     show-sql: true

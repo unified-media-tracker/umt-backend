@@ -1,6 +1,6 @@
 spring:
   application:
-    name: catalog-service
+    name: core-service
 
   jpa:
     open-in-view: false

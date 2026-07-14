@@ -1,22 +1,19 @@
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    id("org.springframework.boot") apply false
+    id("io.spring.dependency-management")
+    `java-library`
 }
 
 group = "com.umt"
-version = "1.0-SNAPSHOT"
+version = "0.0.1-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+repositories { mavenCentral() }
 
 dependencies {
-    testImplementation(kotlin("test"))
-}
-
-kotlin {
-    jvmToolchain(21)
-}
-
-tasks.test {
-    useJUnitPlatform()
+    api("org.jetbrains.kotlin:kotlin-reflect")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
+    api("jakarta.validation:jakarta.validation-api:3.0.2")
 }

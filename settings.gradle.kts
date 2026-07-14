@@ -1,5 +1,5 @@
-rootProject.name="umt-backend"
+rootProject.name = "umt-backend"
 
-include("shared")
-include("core-service")
 include("api-gateway")
+include("core-service")
+include("shared")

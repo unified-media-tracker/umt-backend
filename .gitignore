@@ -51,6 +51,7 @@ out/
 
 ### Application specific ###
 /core-service/src/main/resources/application-local.yml
+/api-gateway/.env
 
 ### IntelliJ IDEA (from .idea/.gitignore) ###
 .idea/shelf/

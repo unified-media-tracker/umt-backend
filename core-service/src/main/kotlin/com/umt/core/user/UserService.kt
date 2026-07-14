@@ -1,4 +1,7 @@
 package com.umt.core.user
 
-class UserService {
+interface UserService {
+    fun getAllUsers(): List<User>
+
+    fun saveUser(user: User): User
 }

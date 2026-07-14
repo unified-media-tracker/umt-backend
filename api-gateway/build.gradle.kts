@@ -1,8 +1,8 @@
 plugins {
-	kotlin("jvm") version "2.3.21"
-	kotlin("plugin.spring") version "2.3.21"
-	id("org.springframework.boot") version "4.1.0"
-	id("io.spring.dependency-management") version "1.1.7"
+	kotlin("jvm")
+	kotlin("plugin.spring")
+	id("org.springframework.boot")
+	id("io.spring.dependency-management")
 }
 
 group = "com.umt"
@@ -17,21 +17,32 @@ java {
 
 repositories {
 	mavenCentral()
+	maven { url = uri("https://repo.spring.io/milestone") }
 }
 
-extra["springCloudVersion"] = "2025.1.2"
+extra["springCloudVersion"] = "2024.0.0-RC1"
 
 dependencies {
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux")
+	implementation("org.springframework.cloud:spring-cloud-starter-gateway")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch").lowercase()
+
+    if (osName.contains("mac")) {
+        val macClassifier = if (osArch == "aarch64") "osx-aarch_64" else "osx-x86_64"
+        runtimeOnly("io.netty:netty-resolver-dns-native-macos") {
+            artifact { classifier = macClassifier }
+        }
+    }
 }
 
 dependencyManagement {

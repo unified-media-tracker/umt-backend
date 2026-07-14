@@ -32,6 +32,16 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch").lowercase()
+
+    if (osName.contains("mac")) {
+        val macClassifier = if (osArch == "aarch64") "osx-aarch_64" else "osx-x86_64"
+        runtimeOnly("io.netty:netty-resolver-dns-native-macos") {
+            artifact { classifier = macClassifier }
+        }
+    }
 }
 
 dependencyManagement {

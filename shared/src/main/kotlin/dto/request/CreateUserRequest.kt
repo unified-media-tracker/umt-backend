@@ -1,4 +1,4 @@
-package request
+package dto.request
 
 data class CreateUserRequest(
     val username: String,

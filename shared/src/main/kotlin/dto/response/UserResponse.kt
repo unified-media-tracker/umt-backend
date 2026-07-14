@@ -1,4 +1,4 @@
-package response
+package dto.response
 
 import java.util.UUID
 

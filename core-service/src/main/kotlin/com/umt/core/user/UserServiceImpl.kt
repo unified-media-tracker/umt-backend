@@ -1,5 +1,8 @@
 package com.umt.core.user
 
+import org.springframework.stereotype.Service
+
+@Service
 class UserServiceImpl(
     private val userRepository: UserRepository
 ): UserService {

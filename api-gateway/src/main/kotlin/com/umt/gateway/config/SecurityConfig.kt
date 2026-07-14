@@ -19,6 +19,7 @@ class SecurityConfig {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers(HttpMethod.GET, "/api/core/media/**").permitAll()
+                    .pathMatchers("/api/core/user/**").permitAll()
                     .anyExchange().authenticated()
             }
             .build()

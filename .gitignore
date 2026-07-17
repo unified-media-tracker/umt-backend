@@ -1,14 +1,14 @@
-# Root ignores
+### Root ignores ###
 /.idea/
 /.kotlin/
 /.gradle/
 /build/
 
-# Module-specific build directories
+### Module-specific build directories ###
 /*/build/
 /shared/build/
 
-# Common ignores
+### Common ignores ###
 .gradle
 HELP.md
 !gradle/wrapper/gradle-wrapper.jar

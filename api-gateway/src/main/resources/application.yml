@@ -1,6 +1,7 @@
 spring:
   application:
     name: api-gateway
+
   cloud:
     gateway:
       globalcors:
@@ -21,5 +22,10 @@ spring:
           predicates:
             - Path=/api/analyser/**
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/umt}
 server:
   port: 8080

@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
+    kotlin("kapt")
     id("org.springframework.boot")
     id("io.spring.dependency-management")
     kotlin("plugin.jpa")
@@ -28,6 +29,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    kapt("org.mapstruct:mapstruct-processor:1.6.3")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")
     annotationProcessor("org.projectlombok:lombok")

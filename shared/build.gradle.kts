@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.spring")
+    kotlin("kapt")
     id("org.springframework.boot") apply false
     id("io.spring.dependency-management")
     `java-library`
@@ -13,6 +14,8 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 repositories { mavenCentral() }
 
 dependencies {
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    kapt("org.mapstruct:mapstruct-processor:1.6.3")
     api("org.jetbrains.kotlin:kotlin-reflect")
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     api("jakarta.validation:jakarta.validation-api:3.0.2")

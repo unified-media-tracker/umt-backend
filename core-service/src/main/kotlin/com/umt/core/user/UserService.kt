@@ -1,7 +1,9 @@
 package com.umt.core.user
 
+import com.umt.core.common.result.FindOrCreateResult
+
 interface UserService {
     fun getAllUsers(): List<User>
 
-    fun saveUser(user: User): User
+    fun findOrCreateUser(user: User): FindOrCreateResult<User>
 }

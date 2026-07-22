@@ -21,7 +21,9 @@ class SecurityConfig {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers(HttpMethod.GET, "/api/core/media/**").permitAll()
+                    .pathMatchers(HttpMethod.POST, "/api/core/user/create").permitAll()
                     .pathMatchers("/api/core/user/**").permitAll()
+                    .pathMatchers(HttpMethod.OPTIONS).permitAll()
                     .anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->

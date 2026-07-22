@@ -1,4 +1,4 @@
-package dto.response
+package com.umt.core.user.dto.response
 
 import java.util.UUID
 

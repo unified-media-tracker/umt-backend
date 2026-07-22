@@ -1,7 +1,7 @@
 package com.umt.core.user
 
-import dto.request.CreateUserRequest
-import dto.response.UserResponse
+import com.umt.core.user.dto.request.CreateUserRequest
+import com.umt.core.user.dto.response.UserResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,5 +16,4 @@ interface UserApi {
 
     @PostMapping("/create", produces = ["application/json"], consumes = ["application/json"])
     fun createUser(@RequestBody request: CreateUserRequest): ResponseEntity<UserResponse>
-
 }

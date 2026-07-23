@@ -8,3 +8,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: validate
+
+tmdb:
+  api-key:   # get at https://www.themoviedb.org/settings/api

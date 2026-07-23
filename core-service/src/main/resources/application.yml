@@ -21,5 +21,9 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/umt}
 
+tmdb:
+  base-url: https://api.themoviedb.org/3
+  api-key: ${TMDB_API_KEY:}
+
 server:
   port: 8081

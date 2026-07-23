@@ -1,6 +1,6 @@
 package com.umt.gateway.config
 
-import com.umt.gateway.security.KeycloakJwtAuthenticationConverter
+import com.umt.shared.security.KeycloakJwtAuthenticationConverter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod

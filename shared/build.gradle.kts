@@ -19,4 +19,11 @@ dependencies {
     api("org.jetbrains.kotlin:kotlin-reflect")
     api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     api("jakarta.validation:jakarta.validation-api:3.0.2")
+    api("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.boot:spring-boot-dependencies:4.1.0")
+    }
 }

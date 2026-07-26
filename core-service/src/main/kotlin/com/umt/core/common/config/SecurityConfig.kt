@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
@@ -18,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
+@EnableMethodSecurity
 @OpenAPIDefinition(
     info = Info(title = "UMT API", version = "v1"),
     security = [SecurityRequirement(name = "keycloakPassword")]
@@ -27,6 +29,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
     type = SecuritySchemeType.OAUTH2,
     flows = OAuthFlows(
         password = OAuthFlow(
+            tokenUrl = "http://localhost:8180/realms/umt/protocol/openid-connect/token"
+        ),
+        authorizationCode = OAuthFlow(
+            authorizationUrl = "http://localhost:8180/realms/umt/protocol/openid-connect/auth",
+            tokenUrl = "http://localhost:8180/realms/umt/protocol/openid-connect/token"
+        ),
+        clientCredentials = OAuthFlow(
             tokenUrl = "http://localhost:8180/realms/umt/protocol/openid-connect/token"
         )
     )

@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 
+@Tag(name = "Media", description = "Operations related to media items (movies, games, etc.)")
 @RequestMapping("/api/core/media")
 interface MediaApi {
 
+    @Operation(summary = "Import movie from TMDB", description = "Imports a movie from TMDB by its ID. Requires ADMIN role.")
     @PostMapping("/import/tmdb/{tmdbId}")
     @PreAuthorize("hasRole('ADMIN')")
     fun importFromTmdb(@PathVariable tmdbId: Long): ResponseEntity<MediaItemResponse>

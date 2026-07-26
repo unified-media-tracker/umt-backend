@@ -31,6 +31,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.mapstruct:mapstruct:1.6.3")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
     kapt("org.mapstruct:mapstruct-processor:1.6.3")
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")

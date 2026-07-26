@@ -20,6 +20,11 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
                 exchanges
+                    .pathMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html"
+                    ).permitAll()
                     .pathMatchers(HttpMethod.GET, "/api/core/media/**").permitAll()
                     .pathMatchers(HttpMethod.POST, "/api/core/user/create").permitAll()
                     .pathMatchers("/api/core/user/**").permitAll()

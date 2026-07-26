@@ -2,6 +2,10 @@ spring:
   application:
     name: core-service
 
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
   jpa:
     open-in-view: false
     properties:
@@ -20,6 +24,21 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/umt}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    oauth:
+      client-id: umt-swagger
+      use-basic-authentication-with-access-token-request: false
+  show-actuator: true
+  writer-with-default-pretty-printer: true
+  default-produces-media-type: application/json
+  swagger-ui.use-root-path: true
 
 tmdb:
   base-url: https://api.themoviedb.org/3

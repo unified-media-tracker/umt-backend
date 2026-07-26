@@ -14,6 +14,8 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @OpenAPIDefinition(
@@ -34,6 +36,7 @@ class SecurityConfig {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
+            .cors { it.configurationSource(corsConfigurationSource()) }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
@@ -51,5 +54,23 @@ class SecurityConfig {
             .oauth2ResourceServer { it.jwt { jwt -> jwt.jwtAuthenticationConverter(KeycloakJwtAuthenticationConverter()) } }
 
         return http.build()
+    }
+
+    @Bean
+    fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
+        val configuration = CorsConfiguration()
+        configuration.allowedOrigins = listOf(
+            "http://localhost:8080",
+            "http://localhost:8081",
+            "http://localhost:5173",
+            "http://127.0.0.1:8080",
+            "http://127.0.0.1:8081"
+        )
+        configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        configuration.allowedHeaders = listOf("*")
+        configuration.allowCredentials = true
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", configuration)
+        return source
     }
 }

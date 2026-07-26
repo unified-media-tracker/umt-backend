@@ -28,17 +28,24 @@ spring:
 springdoc:
   api-docs:
     path: /v3/api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: alpha
     tags-sorter: alpha
     oauth:
       client-id: umt-swagger
-      use-basic-authentication-with-access-token-request: false
-  show-actuator: true
+      use-basic-authentication-with-access-code-grant: false
+    use-root-path: true
   writer-with-default-pretty-printer: true
   default-produces-media-type: application/json
-  swagger-ui.use-root-path: true
+
+  show-actuator: true
+
+logging:
+  level:
+    com.umt.core: DEBUG
+    org.springframework.web: INFO
 
 tmdb:
   base-url: https://api.themoviedb.org/3

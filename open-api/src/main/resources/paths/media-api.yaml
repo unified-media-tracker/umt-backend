@@ -1,0 +1,141 @@
+importFromTmdb:
+  post:
+    tags: [Media]
+    operationId: importFromTmdb
+    summary: Import movie from TMDB
+    parameters:
+      - name: tmdbId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaItemResponse'
+
+getRecommendations:
+  post:
+    tags: [Media]
+    operationId: getRecommendations
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MediaItemRequest'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
+components:
+  schemas:
+    MediaItemResponse:
+      type: object
+      required:
+        - id
+        - mediaType
+        - title
+        - releaseDateStatus
+        - popularityScore
+        - ratingCount
+        - externalSource
+        - externalSourceId
+      properties:
+        id:
+          type: string
+          format: uuid
+        mediaType:
+          $ref: '#/components/schemas/MediaType'
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverImageUrl:
+          type: string
+          nullable: true
+        ageRating:
+          type: string
+          nullable: true
+        releaseDate:
+          type: string
+          format: date
+          nullable: true
+        releaseDateStatus:
+          $ref: '#/components/schemas/ReleaseStatus'
+        popularityScore:
+          type: number
+        averageUserRating:
+          type: number
+          nullable: true
+        ratingCount:
+          type: integer
+          format: int32
+        franchiseId:
+          type: string
+          format: uuid
+          nullable: true
+        externalSource:
+          $ref: '#/components/schemas/ExternalSourceType'
+        externalSourceId:
+          type: string
+        genres:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/GenreResponse'
+          default: []
+
+    GenreResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    MediaType:
+      type: string
+      enum:
+        - MOVIE
+        - GAME
+        - BOOK
+        - MUSIC
+
+    ReleaseStatus:
+      type: string
+      enum:
+        - TBA
+        - ANNOUNCED
+        - RUMORED
+        - CONFIRMED
+        - DELAYED
+        - RELEASED
+        - CANCELED
+
+    ExternalSourceType:
+      type: string
+      enum:
+        - TMDB
+        - IGDB
+        - GOODREADS
+        - SPOTIFY
+
+    MediaItemRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: integer
+          format: int64

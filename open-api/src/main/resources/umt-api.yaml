@@ -1,0 +1,13 @@
+openapi: 3.0.3
+info:
+  title: Core API
+  version: 1.0.0
+paths:
+  /api/core/media/import/tmdb/{tmdbId}:
+    $ref: './paths/media-api.yaml#/importFromTmdb'
+  /api/core/media/recommendations:
+    $ref: './paths/media-api.yaml#/getRecommendations'
+  /api/core/user/all:
+    $ref: './paths/user-api.yaml#/getAllUsers'
+  /api/core/user/create:
+    $ref: './paths/user-api.yaml#/createUser'

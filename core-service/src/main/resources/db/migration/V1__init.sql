@@ -14,7 +14,7 @@ CREATE TYPE availability_status AS ENUM ('AVAILABLE', 'PREORDER', 'UNAVAILABLE')
 
 CREATE TABLE "user"
 (
-    id          UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    id          UUID PRIMARY KEY      ,
     keycloak_id VARCHAR(255) NOT NULL UNIQUE,
     username    VARCHAR(50)  NOT NULL UNIQUE,
     email       VARCHAR(255) NOT NULL UNIQUE,
@@ -31,7 +31,7 @@ CREATE TABLE "user"
 
 CREATE TABLE media_item
 (
-    id                  UUID PRIMARY KEY              DEFAULT gen_random_uuid(),
+    id                  UUID PRIMARY KEY              ,
     media_type          media_type           NOT NULL,
     title               VARCHAR(255)         NOT NULL,
     description         TEXT,
@@ -55,7 +55,7 @@ CREATE INDEX idx_media_item_franchise_id ON media_item (franchise_id);
 
 CREATE TABLE platform
 (
-    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id   UUID PRIMARY KEY ,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -79,7 +79,7 @@ CREATE TABLE game_platform
 
 CREATE TABLE external_rating
 (
-    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            UUID PRIMARY KEY ,
     media_item_id UUID        NOT NULL REFERENCES media_item (id) ON DELETE CASCADE,
     source        VARCHAR(50) NOT NULL,
     score         NUMERIC     NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE external_rating
 
 CREATE TABLE purchase_link
 (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                  UUID PRIMARY KEY ,
     media_item_id       UUID                NOT NULL REFERENCES media_item (id) ON DELETE CASCADE,
     platform_name       VARCHAR(50)         NOT NULL,
     affiliate_url       TEXT                NOT NULL,
@@ -100,7 +100,7 @@ CREATE TABLE purchase_link
 
 CREATE TABLE release_status_history
 (
-    id            UUID PRIMARY KEY        DEFAULT gen_random_uuid(),
+    id            UUID PRIMARY KEY        ,
     media_item_id UUID           NOT NULL REFERENCES media_item (id) ON DELETE CASCADE,
     status        release_status NOT NULL,
     changed_at    TIMESTAMP      NOT NULL DEFAULT now(),
@@ -111,7 +111,7 @@ CREATE INDEX idx_release_status_history_media_item_id ON release_status_history 
 
 CREATE TABLE genre
 (
-    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id   UUID PRIMARY KEY ,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -124,7 +124,7 @@ CREATE TABLE media_item_genre
 
 CREATE TABLE tag
 (
-    id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id       UUID PRIMARY KEY ,
     name     VARCHAR(100) NOT NULL,
     tag_type tag_type     NOT NULL,
     CONSTRAINT uq_tag_name_type UNIQUE (name, tag_type)
@@ -144,7 +144,7 @@ CREATE TABLE media_item_tag
 
 CREATE TABLE contributor
 (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id               UUID PRIMARY KEY ,
     contributor_type contributor_type NOT NULL,
     name             VARCHAR(255)     NOT NULL,
     description      TEXT,
@@ -153,7 +153,7 @@ CREATE TABLE contributor
 
 CREATE TABLE credit
 (
-    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id             UUID PRIMARY KEY ,
     media_item_id  UUID      NOT NULL REFERENCES media_item (id) ON DELETE CASCADE,
     contributor_id UUID      NOT NULL REFERENCES contributor (id) ON DELETE CASCADE,
     role           role_type NOT NULL

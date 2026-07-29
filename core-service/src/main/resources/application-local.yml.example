@@ -9,5 +9,11 @@ spring:
     hibernate:
       ddl-auto: validate
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: umt
+    password: umt
+
 tmdb:
   api-key:   # get at https://www.themoviedb.org/settings/api

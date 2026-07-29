@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class TmdbMovieResponse(
     val id: Long,
     val title: String,
+    val status: String?,
     val overview: String?,
     @JsonProperty("poster_path") val posterPath: String?,
     @JsonProperty("release_date") val releaseDate: String?,

@@ -6,6 +6,7 @@ CREATE TYPE tag_type AS ENUM ('MOOD', 'SETTING', 'KEYWORD');
 CREATE TYPE contributor_type AS ENUM ('PERSON', 'ORGANIZATION');
 CREATE TYPE role_type AS ENUM ('DIRECTOR', 'DEVELOPER', 'AUTHOR', 'ARTIST', 'WRITER', 'STUDIO', 'PUBLISHER');
 CREATE TYPE availability_status AS ENUM ('AVAILABLE', 'PREORDER', 'UNAVAILABLE');
+CREATE TYPE trend_direction AS ENUM ('UP', 'DOWN', 'STABLE');
 
 
 -- ============================================================
@@ -161,3 +162,22 @@ CREATE TABLE credit
 
 CREATE INDEX idx_credit_media_item_id ON credit (media_item_id);
 CREATE INDEX idx_credit_contributor_id ON credit (contributor_id);
+
+
+-- ============================================================
+-- RUMOR SNAPSHOT (computed result written from ai-analyser's event)
+-- ============================================================
+
+CREATE TABLE rumor_snapshot
+(
+    id                        UUID PRIMARY KEY         DEFAULT gen_random_uuid(),
+    media_item_id             UUID            NOT NULL REFERENCES media_item (id) ON DELETE CASCADE,
+    delay_probability         NUMERIC(5, 2)   NOT NULL,
+    aggregate_sentiment_score NUMERIC,
+    confidence_trend          trend_direction NOT NULL,
+    top_source_name           VARCHAR(100),
+    computed_at               TIMESTAMP       NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_rumor_snapshot_media_item_computed_at
+    ON rumor_snapshot (media_item_id, computed_at DESC);

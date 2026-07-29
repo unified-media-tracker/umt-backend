@@ -6,6 +6,8 @@ import com.umt.core.media.tmdb.TmdbClient
 import com.umt.core.media.tmdb.toMediaItem
 import com.umt.core.media.dto.MediaMapper
 import com.umt.core.media.dto.response.MediaItemResponse
+import com.umt.core.rumor.RabbitMQConfig
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,6 +18,7 @@ class MediaServiceImpl(
     private val genreRepository: GenreRepository,
     private val tmdbClient: TmdbClient,
     private val mediaMapper: MediaMapper,
+    private val rabbitTemplate: RabbitTemplate,
 ) : MediaService {
 
     @Transactional
@@ -34,6 +37,9 @@ class MediaServiceImpl(
 
         val saved = mediaItemRepository.save(mediaItem)
 
+        // publishing event for ai-analyser
+        if (saved.releaseDateStatus != ReleaseStatus.RELEASED) addToQueue(mediaItem)
+
         movieDetailsRepository.save(
             MovieDetails(
                 mediaItem = saved,
@@ -43,6 +49,18 @@ class MediaServiceImpl(
 
         return mediaMapper.toResponse(saved)
     }
+
+    fun addToQueue(mediaItem: MediaItem) =
+        mediaItem.id?.let {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EVENTS_EXCHANGE,
+                RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
+                MediaImportedEvent(
+                    mediaItemId = it,
+                    title = mediaItem.title
+                )
+            )
+        }
 
     override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
         return mediaMapper.toListResponse(

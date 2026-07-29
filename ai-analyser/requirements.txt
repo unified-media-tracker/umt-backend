@@ -1,0 +1,10 @@
+pydantic
+uliweb-alembic
+pika
+fastapi
+uvicorn[standard]
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+requests
+feedparser

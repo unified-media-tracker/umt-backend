@@ -61,4 +61,14 @@ class MediaServiceImpl(
                 )
             )
         }
+
+    override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
+        return mediaMapper.toListResponse(
+            mediaItems = mediaItemRepository.fndRandomMediaItemsLimit(RANDOM_MEDIA_ITEMS_LIMIT)
+        )
+    }
+
+    companion object {
+        const val RANDOM_MEDIA_ITEMS_LIMIT = 10
+    }
 }

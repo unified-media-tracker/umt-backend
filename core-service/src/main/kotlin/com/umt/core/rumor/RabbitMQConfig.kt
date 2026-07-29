@@ -16,11 +16,11 @@ class RabbitMQConfig {
     fun eventsExchange(): TopicExchange = TopicExchange(EVENTS_EXCHANGE, true, false)
 
     @Bean
-    fun rumorComputedQueue(): Queue = Queue(RUMOR_COMPUTED_QUEUE, true)
+    fun rumorSnapshotComputedQueue(): Queue = Queue(RUMOR_SNAPSHOT_COMPUTED_QUEUE, true)
 
     @Bean
-    fun rumorComputedBinding(rumorComputedQueue: Queue, eventsExchange: TopicExchange): Binding =
-        BindingBuilder.bind(rumorComputedQueue).to(eventsExchange).with(RUMOR_COMPUTED_ROUTING_KEY)
+    fun rumorSnapshotComputedBinding(rumorSnapshotComputedQueue: Queue, eventsExchange: TopicExchange): Binding =
+        BindingBuilder.bind(rumorSnapshotComputedQueue).to(eventsExchange).with(RUMOR_SNAPSHOT_COMPUTED_ROUTING_KEY)
 
     @Bean
     fun mediaImportedQueue(): Queue = Queue(MEDIA_IMPORTED_QUEUE, true)
@@ -41,8 +41,8 @@ class RabbitMQConfig {
 
     companion object {
         const val EVENTS_EXCHANGE = "umt.events"
-        const val RUMOR_COMPUTED_ROUTING_KEY = "rumor.computed"
-        const val RUMOR_COMPUTED_QUEUE = "core-service.rumor-computed"
+        const val RUMOR_SNAPSHOT_COMPUTED_ROUTING_KEY = "rumor.snapshot.computed"
+        const val RUMOR_SNAPSHOT_COMPUTED_QUEUE = "core-service.rumor-snapshot-computed"
         const val MEDIA_IMPORTED_ROUTING_KEY = "media.imported"
         const val MEDIA_IMPORTED_QUEUE = "ai-analyser.media-imported"
     }

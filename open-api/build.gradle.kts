@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
     id("org.openapi.generator") version "7.8.0"
@@ -7,12 +9,14 @@ repositories {
     mavenCentral()
 }
 
+val generatedDir: String = layout.buildDirectory.dir("generated").get().asFile.absolutePath
+
 openApiGenerate {
     generatorName.set("kotlin-spring")
     inputSpec.set("$projectDir/src/main/resources/umt-api.yaml")
-    outputDir.set("${layout.buildDirectory}/generated")
-    apiPackage.set("com.umt")
-    modelPackage.set("com.umt.model")
+    outputDir.set(generatedDir)
+    apiPackage.set("com.umt.api.generated")
+    modelPackage.set("com.umt.api.generated.model")
     library.set("spring-boot")
     configOptions.set(
         mapOf(
@@ -29,7 +33,7 @@ openApiGenerate {
 
 sourceSets {
     main {
-        kotlin.srcDir("${layout.buildDirectory}/generated/src/main/kotlin")
+        kotlin.srcDir("$generatedDir/src/main/kotlin")
     }
 }
 
@@ -41,4 +45,9 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.1"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springdoc:springdoc-openapi-starter-common:2.6.0")
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }

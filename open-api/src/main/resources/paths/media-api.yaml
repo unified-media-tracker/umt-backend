@@ -2,7 +2,8 @@ importFromTmdb:
   post:
     tags: [Media]
     operationId: importFromTmdb
-    summary: Import movie from TMDB
+    summary: "Import movie from TMDB"
+    description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
     parameters:
       - name: tmdbId
         in: path
@@ -20,6 +21,8 @@ getRecommendations:
   post:
     tags: [Media]
     operationId: getRecommendations
+    summary: "Get recommended media content"
+    description: "Returns a list of recommended movies based on"
     requestBody:
       required: true
       content:

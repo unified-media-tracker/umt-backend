@@ -1,8 +1,8 @@
 package com.umt.core.media.dto
 
+import com.umt.api.generated.model.GenreResponse
+import com.umt.api.generated.model.MediaItemResponse
 import com.umt.core.media.MediaItem
-import com.umt.core.media.dto.response.GenreResponse
-import com.umt.core.media.dto.response.MediaItemResponse
 import com.umt.core.media.genre.Genre
 import com.umt.shared.config.MapperConfig
 import org.mapstruct.Mapper

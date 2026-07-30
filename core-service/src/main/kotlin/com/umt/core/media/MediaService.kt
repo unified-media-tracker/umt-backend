@@ -1,6 +1,6 @@
 package com.umt.core.media
 
-import com.umt.core.media.dto.response.MediaItemResponse
+import com.umt.api.generated.model.MediaItemResponse
 
 interface MediaService {
 

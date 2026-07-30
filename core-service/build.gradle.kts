@@ -44,6 +44,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     implementation(project(":shared"))
+    implementation(project(":open-api"))
 }
 
 kotlin {
@@ -60,4 +61,8 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.matching { it.name.startsWith("kapt") }.configureEach {
+    dependsOn(project(":open-api").tasks.named("compileKotlin"))
 }

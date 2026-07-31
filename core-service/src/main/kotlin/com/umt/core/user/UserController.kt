@@ -3,7 +3,7 @@ package com.umt.core.user
 import com.umt.api.generated.UserApi
 import com.umt.api.generated.model.CreateUserRequest
 import com.umt.api.generated.model.UserResponse
-import com.umt.core.user.dto.UserMapper
+import com.umt.core.user.UserMapper
 import org.springframework.http.ResponseEntity
 
 class UserController(

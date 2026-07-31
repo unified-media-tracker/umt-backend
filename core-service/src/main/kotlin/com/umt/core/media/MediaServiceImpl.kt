@@ -5,7 +5,7 @@ import com.umt.core.media.genre.Genre
 import com.umt.core.media.genre.GenreRepository
 import com.umt.core.media.tmdb.TmdbClient
 import com.umt.core.media.tmdb.toMediaItem
-import com.umt.core.media.dto.MediaMapper
+import com.umt.core.media.MediaMapper
 import com.umt.core.rumor.RabbitMQConfig
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service

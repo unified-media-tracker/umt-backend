@@ -5,7 +5,9 @@ import com.umt.api.generated.model.CreateUserRequest
 import com.umt.api.generated.model.UserResponse
 import com.umt.core.user.UserMapper
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.RestController
 
+@RestController
 class UserController(
     private val userService: UserService,
     private val userMapper: UserMapper

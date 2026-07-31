@@ -16,6 +16,10 @@ class MediaController(private val mediaService: MediaService) : MediaApi {
     override fun importFromTmdb(@PathVariable tmdbId: Long): ResponseEntity<MediaItemResponse> =
         ResponseEntity.ok(mediaService.importMovieFromTmdb(tmdbId))
 
+    @PreAuthorize("hasRole('ADMIN')")
+    override fun syncUpcomingAlbums(): ResponseEntity<List<MediaItemResponse>> =
+        ResponseEntity.ok(mediaService.syncUpcomingAlbums())
+
     @PreAuthorize("hasRole('USER')")
     override fun getRecommendations(@RequestBody mediaItemRequest: MediaItemRequest): ResponseEntity<List<MediaItemResponse>> =
         ResponseEntity.ok(mediaService.getUserRecommendations(userId = mediaItemRequest.userId))

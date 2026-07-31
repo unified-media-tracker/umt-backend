@@ -12,6 +12,8 @@ tags:
 paths:
   /api/core/media/import/tmdb/{tmdbId}:
     $ref: './paths/media-api.yaml#/importFromTmdb'
+  /api/core/media/sync/upcoming-albums:
+    $ref: './paths/media-api.yaml#/syncUpcomingAlbums'
   /api/core/media/recommendations:
     $ref: './paths/media-api.yaml#/getRecommendations'
   /api/core/user/all:

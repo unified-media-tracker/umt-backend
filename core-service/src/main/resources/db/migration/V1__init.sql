@@ -145,12 +145,17 @@ CREATE TABLE media_item_tag
 
 CREATE TABLE contributor
 (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contributor_type contributor_type NOT NULL,
-    name             VARCHAR(255)     NOT NULL,
-    description      TEXT,
-    image_url        TEXT
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contributor_type   contributor_type NOT NULL,
+    name               VARCHAR(255)     NOT NULL,
+    description        TEXT,
+    image_url          TEXT,
+    external_source    external_source_type,
+    external_source_id VARCHAR(100)
 );
+
+CREATE UNIQUE INDEX uq_contributor_external ON contributor (external_source, external_source_id)
+    WHERE external_source IS NOT NULL;
 
 CREATE TABLE credit
 (

@@ -1,5 +1,6 @@
 package com.umt.core.contribution
 
+import com.umt.core.media.ExternalSourceType
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -28,6 +29,15 @@ class Contributor(
 
     @field:Column(name = IMAGE_URL_COLUMN)
     var imageUrl: String? = null,
+
+    // Nullable — a contributor can be added by hand with no external catalogue behind it.
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @field:Column(name = EXTERNAL_SOURCE_COLUMN)
+    var externalSource: ExternalSourceType? = null,
+
+    @field:Column(name = EXTERNAL_SOURCE_ID_COLUMN, length = 100)
+    var externalSourceId: String? = null,
 ) {
     companion object {
         const val TABLE_NAME = "contributor"
@@ -36,5 +46,7 @@ class Contributor(
         const val NAME_COLUMN = "name"
         const val DESCRIPTION_COLUMN = "description"
         const val IMAGE_URL_COLUMN = "image_url"
+        const val EXTERNAL_SOURCE_COLUMN = "external_source"
+        const val EXTERNAL_SOURCE_ID_COLUMN = "external_source_id"
     }
 }

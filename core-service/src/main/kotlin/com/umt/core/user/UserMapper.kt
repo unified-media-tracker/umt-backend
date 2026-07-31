@@ -1,8 +1,7 @@
-package com.umt.core.user.dto
+package com.umt.core.user
 
 import com.umt.api.generated.model.CreateUserRequest
 import com.umt.api.generated.model.UserResponse
-import com.umt.core.user.User
 import com.umt.shared.config.MapperConfig
 import org.mapstruct.Mapper
 import org.mapstruct.Mapping

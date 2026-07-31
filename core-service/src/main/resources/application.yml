@@ -51,5 +51,9 @@ tmdb:
   base-url: https://api.themoviedb.org/3
   api-key: ${TMDB_API_KEY:}
 
+musicbrainz:
+  base-url: https://musicbrainz.org/ws/2
+  user-agent: "UMT-CatalogSync/0.1"
+
 server:
   port: 8081

@@ -6,6 +6,8 @@ interface MediaService {
 
     fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse
 
+    fun syncUpcomingAlbums(): List<MediaItemResponse>
+
     fun getUserRecommendations(userId: Long): List<MediaItemResponse>
 
 }

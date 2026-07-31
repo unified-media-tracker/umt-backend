@@ -1,7 +1,7 @@
 CREATE TYPE plan_tier AS ENUM ('FREE', 'PREMIUM');
 CREATE TYPE media_type AS ENUM ('MOVIE', 'GAME', 'BOOK', 'MUSIC');
 CREATE TYPE release_status AS ENUM ('TBA', 'ANNOUNCED', 'RUMORED', 'CONFIRMED', 'DELAYED', 'RELEASED', 'CANCELED');
-CREATE TYPE external_source_type AS ENUM ('TMDB', 'IGDB', 'GOODREADS', 'SPOTIFY');
+CREATE TYPE external_source_type AS ENUM ('TMDB', 'IGDB', 'MUSICBRAINZ');
 CREATE TYPE tag_type AS ENUM ('MOOD', 'SETTING', 'KEYWORD');
 CREATE TYPE contributor_type AS ENUM ('PERSON', 'ORGANIZATION');
 CREATE TYPE role_type AS ENUM ('DIRECTOR', 'DEVELOPER', 'AUTHOR', 'ARTIST', 'WRITER', 'STUDIO', 'PUBLISHER');
@@ -145,12 +145,17 @@ CREATE TABLE media_item_tag
 
 CREATE TABLE contributor
 (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contributor_type contributor_type NOT NULL,
-    name             VARCHAR(255)     NOT NULL,
-    description      TEXT,
-    image_url        TEXT
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contributor_type   contributor_type NOT NULL,
+    name               VARCHAR(255)     NOT NULL,
+    description        TEXT,
+    image_url          TEXT,
+    external_source    external_source_type,
+    external_source_id VARCHAR(100)
 );
+
+CREATE UNIQUE INDEX uq_contributor_external ON contributor (external_source, external_source_id)
+    WHERE external_source IS NOT NULL;
 
 CREATE TABLE credit
 (

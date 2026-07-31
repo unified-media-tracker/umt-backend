@@ -56,6 +56,7 @@ class SecurityConfig {
                         "/swagger-ui.html"
                     ).permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/core/media/**").permitAll()
                     // temporary endpoint for testing. should be '/api/core/admin/users' in future
                     .requestMatchers(HttpMethod.GET, "/api/core/user/all").hasRole("ADMIN")
                     .anyRequest().authenticated()

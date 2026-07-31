@@ -17,6 +17,22 @@ importFromTmdb:
             schema:
               $ref: '#/components/schemas/MediaItemResponse'
 
+syncUpcomingAlbums:
+  post:
+    tags: [Media]
+    operationId: syncUpcomingAlbums
+    summary: "Sync upcoming albums from Metacritic + MusicBrainz"
+    description: "Scrapes Metacritic's upcoming album calendar for {artist, title, date}, resolves each against MusicBrainz, and imports confident matches. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
 getRecommendations:
   post:
     tags: [Media]
@@ -132,8 +148,7 @@ components:
       enum:
         - TMDB
         - IGDB
-        - GOODREADS
-        - SPOTIFY
+        - MUSICBRAINZ
 
     MediaItemRequest:
       type: object

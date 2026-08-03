@@ -13,8 +13,20 @@ import org.springframework.web.bind.annotation.RestController
 class MediaController(private val mediaService: MediaService) : MediaApi {
 
     @PreAuthorize("hasRole('ADMIN')")
-    override fun importFromTmdb(@PathVariable tmdbId: Long): ResponseEntity<MediaItemResponse> =
+    override fun importMovieFromTmdb(@PathVariable tmdbId: Long): ResponseEntity<MediaItemResponse> =
         ResponseEntity.ok(mediaService.importMovieFromTmdb(tmdbId))
+
+    @PreAuthorize("hasRole('ADMIN')")
+    override fun importTvShowFromTmdb(@PathVariable tmdbId: Long): ResponseEntity<MediaItemResponse> =
+        ResponseEntity.ok(mediaService.importTvShowFromTmdb(tmdbId))
+
+    @PreAuthorize("hasRole('ADMIN')")
+    override fun syncUpcomingMovies(): ResponseEntity<List<MediaItemResponse>> =
+        ResponseEntity.ok(mediaService.syncUpcomingMovies())
+
+    @PreAuthorize("hasRole('ADMIN')")
+    override fun syncUpcomingTvSeries(): ResponseEntity<List<MediaItemResponse>> =
+        ResponseEntity.ok(mediaService.syncUpcomingTvSeries())
 
     @PreAuthorize("hasRole('ADMIN')")
     override fun syncUpcomingAlbums(): ResponseEntity<List<MediaItemResponse>> =

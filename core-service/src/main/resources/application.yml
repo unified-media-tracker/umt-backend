@@ -55,5 +55,9 @@ musicbrainz:
   base-url: https://musicbrainz.org/ws/2
   user-agent: "UMT-CatalogSync/0.1"
 
+igdb:
+  client-id: ${IGDB_CLIENT_ID:}
+  client-secret: ${IGDB_CLIENT_SECRET:}
+
 server:
   port: 8081

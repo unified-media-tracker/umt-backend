@@ -84,6 +84,22 @@ syncUpcomingAlbums:
               items:
                 $ref: '#/components/schemas/MediaItemResponse'
 
+syncUpcomingGames:
+  post:
+    tags: [Media]
+    operationId: syncUpcomingGames
+    summary: "Sync upcoming games from IGDB"
+    description: "Queries IGDB for main-category games with a future first_release_date and imports them. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
 getRecommendations:
   post:
     tags: [Media]

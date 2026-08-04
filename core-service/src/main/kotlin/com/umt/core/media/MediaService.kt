@@ -14,6 +14,8 @@ interface MediaService {
 
     fun syncUpcomingAlbums(): List<MediaItemResponse>
 
+    fun syncUpcomingGames(): List<MediaItemResponse>
+
     fun getUserRecommendations(userId: Long): List<MediaItemResponse>
 
 }

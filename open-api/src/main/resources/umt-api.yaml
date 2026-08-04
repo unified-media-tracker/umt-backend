@@ -20,6 +20,8 @@ paths:
     $ref: './paths/media-api.yaml#/syncUpcomingTvSeries'
   /api/core/media/sync/upcoming-albums:
     $ref: './paths/media-api.yaml#/syncUpcomingAlbums'
+  /api/core/media/sync/upcoming-games:
+    $ref: './paths/media-api.yaml#/syncUpcomingGames'
   /api/core/media/recommendations:
     $ref: './paths/media-api.yaml#/getRecommendations'
   /api/core/user/all:

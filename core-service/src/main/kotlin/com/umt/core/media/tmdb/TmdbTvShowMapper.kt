@@ -6,34 +6,34 @@ import com.umt.core.media.MediaType
 import com.umt.core.media.ReleaseStatus
 import java.time.LocalDate
 
-val TmdbMovieResponse.parsedReleaseDate: LocalDate?
-    get() = releaseDate?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+val TmdbTvShowResponse.parsedReleaseDate: LocalDate?
+    get() = firstAirDate?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
-fun TmdbMovieResponse.toMediaItem(): MediaItem = MediaItem(
-    mediaType = MediaType.MOVIE,
-    title = title,
+fun TmdbTvShowResponse.toMediaItem(): MediaItem = MediaItem(
+    mediaType = MediaType.TV_SHOW,
+    title = name,
     description = overview,
     coverImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
     releaseDate = parsedReleaseDate,
-    releaseDateStatus = mapReleaseStatus(status, releaseDate),
+    releaseDateStatus = mapTvReleaseStatus(status, firstAirDate),
     externalSource = ExternalSourceType.TMDB,
     externalSourceId = id.toString(),
 )
 
-private fun mapReleaseStatus(tmdbStatus: String?, releaseDate: String?): ReleaseStatus {
-    val parsedDate = releaseDate?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+// TV uses its own status vocabulary — no "Rumored"/"Post Production" here, but it does
+// have "Returning Series" for an ongoing show, which movies have no equivalent of.
+private fun mapTvReleaseStatus(tmdbStatus: String?, firstAirDate: String?): ReleaseStatus {
+    val parsedDate = firstAirDate?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
     return when (tmdbStatus?.trim()?.lowercase()) {
-        "rumored" -> ReleaseStatus.RUMORED
+        "planned", "pilot" -> ReleaseStatus.ANNOUNCED
 
-        "planned" -> ReleaseStatus.ANNOUNCED
-
-        "in production", "post production" -> {
+        "in production" -> {
             if (parsedDate != null && parsedDate.isAfter(LocalDate.now())) ReleaseStatus.CONFIRMED
             else ReleaseStatus.ANNOUNCED
         }
 
-        "released" -> {
+        "returning series", "ended" -> {
             if (parsedDate != null && parsedDate.isAfter(LocalDate.now())) ReleaseStatus.CONFIRMED
             else ReleaseStatus.RELEASED
         }

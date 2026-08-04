@@ -7,6 +7,8 @@ import com.umt.core.media.genre.GenreRepository
 import com.umt.core.media.metacritic.MetacriticAlbumsClient
 import com.umt.core.media.musicbrainz.MusicBrainzClient
 import com.umt.core.media.musicbrainz.MusicBrainzReleaseGroup
+import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
+import com.umt.core.media.tmdb.TmdbCatalogImporter
 import com.umt.core.media.tmdb.TmdbClient
 import com.umt.core.media.tmdb.toMediaItem
 import com.umt.core.rumor.RabbitMQConfig
@@ -24,41 +26,54 @@ class MediaServiceImpl(
     private val contributorRepository: ContributorRepository,
     private val creditRepository: CreditRepository,
     private val tmdbClient: TmdbClient,
+    private val tmdbCatalogImporter: TmdbCatalogImporter,
     private val metacriticAlbumsClient: MetacriticAlbumsClient,
     private val musicBrainzClient: MusicBrainzClient,
+    private val mediaEventPublisher: MediaEventPublisher,
+    private val releaseDateSyncService: ReleaseDateSyncService,
     private val mediaMapper: MediaMapper,
     private val rabbitTemplate: RabbitTemplate,
 ) : MediaService {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Transactional
-    override fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse {
-        val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
-            ExternalSourceType.TMDB, tmdbId.toString(),
-        )
-        if (existing != null) return mediaMapper.toResponse(existing)
+    override fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importMovie(tmdbId)
 
-        val tmdbMovie = tmdbClient.fetchMovie(tmdbId)
-        val mediaItem = tmdbMovie.toMediaItem()
+    override fun importTvShowFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importTvShow(tmdbId)
 
-        mediaItem.genres = tmdbMovie.genres
-            .map { genreRepository.findByName(it.name) ?: genreRepository.save(Genre(name = it.name)) }
-            .toMutableSet()
+    // Calls tmdbCatalogImporter directly (a different bean) rather than this.importMovieFromTmdb -
+    // self-invocation would bypass Spring's proxy and silently drop @Transactional. See
+    // TmdbCatalogImporter's class doc for the full story.
+    override fun syncUpcomingMovies(): List<MediaItemResponse> {
+        val ids = tmdbClient.fetchUpcomingMovieIds()
+        val results = mutableListOf<MediaItemResponse>()
 
-        val saved = mediaItemRepository.save(mediaItem)
+        for (id in ids) {
+            try {
+                results.add(tmdbCatalogImporter.importMovie(id))
+            } catch (ex: Exception) {
+                log.error("Failed to import upcoming movie tmdbId={}, skipping it this run", id, ex)
+            }
+        }
 
-        // publishing event for ai-analyser
-        if (saved.releaseDateStatus != ReleaseStatus.RELEASED) addToQueue(mediaItem)
+        log.info("Movie sync: {} discovered from TMDb", ids.size)
+        return results
+    }
 
-        movieDetailsRepository.save(
-            MovieDetails(
-                mediaItem = saved,
-                runtimeMinutes = tmdbMovie.runtime,
-            )
-        )
+    override fun syncUpcomingTvSeries(): List<MediaItemResponse> {
+        val ids = tmdbClient.fetchUpcomingTvShowIds()
+        val results = mutableListOf<MediaItemResponse>()
 
-        return mediaMapper.toResponse(saved)
+        for (id in ids) {
+            try {
+                results.add(tmdbCatalogImporter.importTvShow(id))
+            } catch (ex: Exception) {
+                log.error("Failed to import upcoming tv show tmdbId={}, skipping it this run", id, ex)
+            }
+        }
+
+        log.info("TV sync: {} discovered from TMDb", ids.size)
+        return results
     }
 
     // Deliberately not @Transactional: MusicBrainz enforces ~1 request/second, so this loop

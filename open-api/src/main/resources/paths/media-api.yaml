@@ -1,7 +1,7 @@
-importFromTmdb:
+importMovieFromTmdb:
   post:
     tags: [Media]
-    operationId: importFromTmdb
+    operationId: importMovieFromTmdb
     summary: "Import movie from TMDB"
     description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
     parameters:
@@ -16,6 +16,57 @@ importFromTmdb:
           application/json:
             schema:
               $ref: '#/components/schemas/MediaItemResponse'
+
+importTvShowFromTmdb:
+  post:
+    tags: [Media]
+    operationId: importTvShowFromTmdb
+    summary: "Import TV show from TMDB"
+    description: "Imports a TV show from TMDB by its ID. Requires ADMIN role."
+    parameters:
+      - name: tmdbId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaItemResponse'
+
+syncUpcomingMovies:
+  post:
+    tags: [Media]
+    operationId: syncUpcomingMovies
+    summary: "Sync upcoming movies from TMDB"
+    description: "Queries TMDB's /movie/upcoming and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
+syncUpcomingTvSeries:
+  post:
+    tags: [Media]
+    operationId: syncUpcomingTvSeries
+    summary: "Sync upcoming TV series from TMDB"
+    description: "Queries TMDB's /discover/tv filtered to a future first_air_date and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
 
 syncUpcomingAlbums:
   post:
@@ -131,6 +182,7 @@ components:
         - GAME
         - BOOK
         - MUSIC
+        - TV_SHOW
 
     ReleaseStatus:
       type: string

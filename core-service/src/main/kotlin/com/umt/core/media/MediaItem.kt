@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-enum class MediaType { MOVIE, GAME, BOOK, MUSIC }
+enum class MediaType { MOVIE, TV_SHOW, GAME, BOOK, MUSIC }
 enum class ReleaseStatus { TBA, ANNOUNCED, RUMORED, CONFIRMED, DELAYED, RELEASED, CANCELED }
 enum class ExternalSourceType { TMDB, IGDB, MUSICBRAINZ }
 

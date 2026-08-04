@@ -10,8 +10,14 @@ tags:
     description: Operations related to users
 
 paths:
-  /api/core/media/import/tmdb/{tmdbId}:
-    $ref: './paths/media-api.yaml#/importFromTmdb'
+  /api/core/media/import/tmdb/movie/{tmdbId}:
+    $ref: './paths/media-api.yaml#/importMovieFromTmdb'
+  /api/core/media/import/tmdb/tv/{tmdbId}:
+    $ref: './paths/media-api.yaml#/importTvShowFromTmdb'
+  /api/core/media/sync/upcoming-movies:
+    $ref: './paths/media-api.yaml#/syncUpcomingMovies'
+  /api/core/media/sync/upcoming-tv-series:
+    $ref: './paths/media-api.yaml#/syncUpcomingTvSeries'
   /api/core/media/sync/upcoming-albums:
     $ref: './paths/media-api.yaml#/syncUpcomingAlbums'
   /api/core/media/recommendations:

@@ -2,37 +2,31 @@ package com.umt.core.media
 
 import com.umt.api.generated.model.MediaItemResponse
 import com.umt.core.contribution.*
-import com.umt.core.media.genre.Genre
-import com.umt.core.media.genre.GenreRepository
+import com.umt.core.media.igdb.IgdbClient
+import com.umt.core.media.igdb.parsedReleaseDate as parsedReleaseDateFromIgdb
+import com.umt.core.media.igdb.toMediaItem as toMediaItemFromIgdb
 import com.umt.core.media.metacritic.MetacriticAlbumsClient
 import com.umt.core.media.musicbrainz.MusicBrainzClient
 import com.umt.core.media.musicbrainz.MusicBrainzReleaseGroup
 import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
 import com.umt.core.media.tmdb.TmdbCatalogImporter
 import com.umt.core.media.tmdb.TmdbClient
-import com.umt.core.media.tmdb.toMediaItem
-import com.umt.core.rumor.RabbitMQConfig
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
 
 @Service
 class MediaServiceImpl(
     private val mediaItemRepository: MediaRepository,
-    private val movieDetailsRepository: MovieDetailsRepository,
-    private val genreRepository: GenreRepository,
     private val contributorRepository: ContributorRepository,
     private val creditRepository: CreditRepository,
     private val tmdbClient: TmdbClient,
     private val tmdbCatalogImporter: TmdbCatalogImporter,
     private val metacriticAlbumsClient: MetacriticAlbumsClient,
+    private val igdbClient: IgdbClient,
     private val musicBrainzClient: MusicBrainzClient,
     private val mediaEventPublisher: MediaEventPublisher,
     private val releaseDateSyncService: ReleaseDateSyncService,
     private val mediaMapper: MediaMapper,
-    private val rabbitTemplate: RabbitTemplate,
 ) : MediaService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -82,16 +76,21 @@ class MediaServiceImpl(
     // one bad candidate shouldn't roll back albums already imported earlier in the same run.
     override fun syncUpcomingAlbums(): List<MediaItemResponse> {
         val discovered = metacriticAlbumsClient.fetchUpcomingAlbums()
-        val imported = mutableListOf<MediaItem>()
+        val results = mutableListOf<MediaItemResponse>()
 
         for (candidate in discovered) {
             try {
-                // Cheap local check first - skips the throttled MusicBrainz call for the ~99%
-                // of each run that's the same overlapping window we already resolved yesterday.
-                val alreadyImported = mediaItemRepository.existsByMediaTypeAndTitleIgnoreCaseAndReleaseDate(
-                    MediaType.MUSIC, candidate.title, candidate.releaseDate,
+                // Matched by title only (not title+date): a date change on an already-known
+                // album still hits this branch, so it can be compared/updated without spending
+                // a throttled MusicBrainz call just to re-discover the same MBID.
+                val existingAlbum = mediaItemRepository.findFirstByMediaTypeAndTitleIgnoreCase(
+                    MediaType.MUSIC, candidate.title,
                 )
-                if (alreadyImported) continue
+                if (existingAlbum != null) {
+                    val updated = releaseDateSyncService.updateIfChanged(existingAlbum, candidate.releaseDate, "Metacritic")
+                    results.add(mediaMapper.toResponse(updated))
+                    continue
+                }
 
                 val match = musicBrainzClient.findReleaseGroup(candidate.artist, candidate.title)
                 if (match == null) {
@@ -99,27 +98,26 @@ class MediaServiceImpl(
                     continue
                 }
 
-                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
+                // Belt-and-suspenders: the title matching above should already have caught this,
+                // but titles can be normalised differently between Metacritic and MusicBrainz.
+                val existingByMbid = mediaItemRepository.findByExternalSourceAndExternalSourceId(
                     ExternalSourceType.MUSICBRAINZ, match.id,
                 )
-                if (existing != null) continue
+                if (existingByMbid != null) continue
 
                 val mediaItem = match.toMediaItemFromMusicBrainz(candidate.releaseDate)
                 val saved = mediaItemRepository.save(mediaItem)
 
                 linkArtistCredit(match, saved)
-
-                if (saved.releaseDateStatus != ReleaseStatus.RELEASED) addToQueue(mediaItem)
-                imported.add(saved)
+                mediaEventPublisher.publishIfUpcoming(saved)
+                results.add(mediaMapper.toResponse(saved))
             } catch (ex: Exception) {
-                // One bad candidate (network hiccup, unexpected data shape, whatever) shouldn't
-                // cost us everything already imported earlier in this same run.
                 log.error("Failed to process candidate {} - {}, skipping it this run", candidate.artist, candidate.title, ex)
             }
         }
 
-        log.info("Album sync: {} discovered, {} newly imported", discovered.size, imported.size)
-        return mediaMapper.toListResponse(imported)
+        log.info("Album sync: {} discovered from Metacritic", discovered.size)
+        return results
     }
 
     // Find-or-create the artist by MusicBrainz artist MBID (not by name — see Contributor's
@@ -145,17 +143,37 @@ class MediaServiceImpl(
         creditRepository.save(Credit(mediaItem = mediaItem, contributor = contributor, role = RoleType.ARTIST))
     }
 
-    fun addToQueue(mediaItem: MediaItem) =
-        mediaItem.id?.let {
-            rabbitTemplate.convertAndSend(
-                RabbitMQConfig.EVENTS_EXCHANGE,
-                RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
-                MediaImportedEvent(
-                    mediaItemId = it,
-                    title = mediaItem.title
+    // IGDB is both the discovery and the identity source in one call (unlike the Metacritic+
+    // MusicBrainz split for albums), so this is simpler: no per-candidate throttling needed,
+    // IGDB's own limit is 4req/s/8 concurrent, and we only make one query per run here.
+    override fun syncUpcomingGames(): List<MediaItemResponse> {
+        val games = igdbClient.fetchUpcomingGames()
+        val results = mutableListOf<MediaItemResponse>()
+
+        for (game in games) {
+            try {
+                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
+                    ExternalSourceType.IGDB, game.id.toString(),
                 )
-            )
+                if (existing != null) {
+                    val updated = releaseDateSyncService.updateIfChanged(existing, game.parsedReleaseDateFromIgdb, "IGDB")
+                    results.add(mediaMapper.toResponse(updated))
+                    continue
+                }
+
+                val mediaItem = game.toMediaItemFromIgdb()
+                val saved = mediaItemRepository.save(mediaItem)
+
+                mediaEventPublisher.publishIfUpcoming(saved)
+                results.add(mediaMapper.toResponse(saved))
+            } catch (ex: Exception) {
+                log.error("Failed to process IGDB game {} - {}, skipping it this run", game.id, game.name, ex)
+            }
         }
+
+        log.info("Game sync: {} fetched from IGDB", games.size)
+        return results
+    }
 
     override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
         return mediaMapper.toListResponse(

@@ -182,6 +182,7 @@ components:
         - GAME
         - BOOK
         - MUSIC
+        - TV_SHOW
 
     ReleaseStatus:
       type: string

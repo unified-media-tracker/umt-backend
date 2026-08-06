@@ -64,14 +64,16 @@ is done. To enable it:
 
 None of this depends on the workflow file being pushed first — the token is issued independently.
 
-1. Sign in at [sonarcloud.io](https://sonarcloud.io) with GitHub and import this repository.
-   Public repositories are analysed for free with no line limit.
+1. Sign in at [sonarcloud.io](https://sonarcloud.io) with GitHub, then **create the organization
+   first** — signing in and generating a token does not create one. Use **+ → Create
+   organization**, import the `unified-media-tracker` GitHub organization, and then import this
+   repository as a project. Public repositories are analysed for free with no line limit.
 2. Generate the token. On the Free plan this is a **personal** token, not a project one:
    avatar (top right) → **My Account** → **Security** → **Generate Tokens**
    ([sonarcloud.io/account/security](https://sonarcloud.io/account/security)). Copy it
    immediately — it is shown once.
-3. Add it to this repository under *Settings → Secrets and variables → Actions → New repository
-   secret*, named `SONAR_TOKEN`.
+3. Add it to this repository under **Settings** → **Secrets and variables** → **Actions** → **New repository
+   secret**, named `SONAR_TOKEN`.
 4. Turn off automatic analysis: open the project → **Administration** → **Analysis Method** →
    disable **Automatic Analysis**. The Gradle scanner in CI replaces it, and leaving both on
    makes the CI analysis fail.

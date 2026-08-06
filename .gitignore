@@ -49,6 +49,15 @@ out/
 ### Kotlin ###
 .kotlin
 
+### Python (ai-analyser) ###
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
 ### Application specific ###
 /core-service/src/main/resources/application-local.yml
 /api-gateway/.env

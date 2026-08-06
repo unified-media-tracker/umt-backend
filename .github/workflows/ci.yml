@@ -18,6 +18,9 @@ jobs:
     env:
       # empty on forks and Dependabot PRs — the Sonar step is skipped rather than failing
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # optional overrides; unset falls back to the defaults in build.gradle.kts
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
 
     steps:
       - uses: actions/checkout@v4

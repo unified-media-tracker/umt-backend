@@ -43,14 +43,15 @@ subprojects {
 sonar {
     properties {
         property("sonar.host.url", "https://sonarcloud.io")
-        // override from CI if the keys on SonarQube Cloud end up named differently
         property(
             "sonar.projectKey",
-            System.getenv("SONAR_PROJECT_KEY") ?: "unified-media-tracker-backend",
+            System.getenv("SONAR_PROJECT_KEY")?.takeIf(String::isNotBlank)
+                ?: "unified-media-tracker_umt-backend",
         )
         property(
             "sonar.organization",
-            System.getenv("SONAR_ORGANIZATION") ?: "unified-media-tracker",
+            System.getenv("SONAR_ORGANIZATION")?.takeIf(String::isNotBlank)
+                ?: "unified-media-tracker",
         )
 
         // ai-analyser is not a Gradle module, so it is attached to the root project by hand.

@@ -59,5 +59,8 @@ igdb:
   client-id: ${IGDB_CLIENT_ID:}
   client-secret: ${IGDB_CLIENT_SECRET:}
 
+hardcover:
+  api-token: ${HARDCOVER_API_TOKEN:}
+
 server:
   port: 8081

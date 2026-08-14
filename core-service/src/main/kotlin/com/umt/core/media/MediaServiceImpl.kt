@@ -2,12 +2,15 @@ package com.umt.core.media
 
 import com.umt.api.generated.model.MediaItemResponse
 import com.umt.core.contribution.*
+import com.umt.core.media.hardcover.HardcoverBook
+import com.umt.core.media.hardcover.HardcoverClient
+import com.umt.core.media.hardcover.parsedReleaseDate as parsedReleaseDateFromHardcover
+import com.umt.core.media.hardcover.toMediaItem as toMediaItemFromHardcover
 import com.umt.core.media.igdb.IgdbClient
 import com.umt.core.media.igdb.parsedReleaseDate as parsedReleaseDateFromIgdb
 import com.umt.core.media.igdb.toMediaItem as toMediaItemFromIgdb
 import com.umt.core.media.metacritic.MetacriticAlbumsClient
 import com.umt.core.media.musicbrainz.MusicBrainzClient
-import com.umt.core.media.musicbrainz.MusicBrainzReleaseGroup
 import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
 import com.umt.core.media.tmdb.TmdbCatalogImporter
 import com.umt.core.media.tmdb.TmdbClient
@@ -22,8 +25,9 @@ class MediaServiceImpl(
     private val tmdbClient: TmdbClient,
     private val tmdbCatalogImporter: TmdbCatalogImporter,
     private val metacriticAlbumsClient: MetacriticAlbumsClient,
-    private val igdbClient: IgdbClient,
     private val musicBrainzClient: MusicBrainzClient,
+    private val igdbClient: IgdbClient,
+    private val hardcoverClient: HardcoverClient,
     private val mediaEventPublisher: MediaEventPublisher,
     private val releaseDateSyncService: ReleaseDateSyncService,
     private val mediaMapper: MediaMapper,
@@ -108,7 +112,12 @@ class MediaServiceImpl(
                 val mediaItem = match.toMediaItemFromMusicBrainz(candidate.releaseDate)
                 val saved = mediaItemRepository.save(mediaItem)
 
-                linkArtistCredit(match, saved)
+                val artistRef = match.artistCredit.firstOrNull()?.artist
+                if (artistRef == null) {
+                    log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
+                } else {
+                    linkCredit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
+                }
                 mediaEventPublisher.publishIfUpcoming(saved)
                 results.add(mediaMapper.toResponse(saved))
             } catch (ex: Exception) {
@@ -118,29 +127,6 @@ class MediaServiceImpl(
 
         log.info("Album sync: {} discovered from Metacritic", discovered.size)
         return results
-    }
-
-    // Find-or-create the artist by MusicBrainz artist MBID (not by name — see Contributor's
-    // externalSource comment) and credit them on this album, so an artist profile page can
-    // later just query Credit by contributor instead of matching album titles by name.
-    private fun linkArtistCredit(match: MusicBrainzReleaseGroup, mediaItem: MediaItem) {
-        val artistRef = match.artistCredit.firstOrNull()?.artist ?: run {
-            log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
-            return
-        }
-
-        val contributor = contributorRepository.findByExternalSourceAndExternalSourceId(
-            ExternalSourceType.MUSICBRAINZ, artistRef.id,
-        ) ?: contributorRepository.save(
-            Contributor(
-                contributorType = ContributorType.PERSON,
-                name = artistRef.name,
-                externalSource = ExternalSourceType.MUSICBRAINZ,
-                externalSourceId = artistRef.id,
-            )
-        )
-
-        creditRepository.save(Credit(mediaItem = mediaItem, contributor = contributor, role = RoleType.ARTIST))
     }
 
     // IGDB is both the discovery and the identity source in one call (unlike the Metacritic+
@@ -173,6 +159,56 @@ class MediaServiceImpl(
 
         log.info("Game sync: {} fetched from IGDB", games.size)
         return results
+    }
+
+    override fun syncUpcomingBooks(): List<MediaItemResponse> {
+        val books = hardcoverClient.fetchUpcomingBooks()
+        val results = mutableListOf<MediaItemResponse>()
+
+        for (book in books) {
+            try {
+                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
+                    ExternalSourceType.HARDCOVER, book.id.toString(),
+                )
+                if (existing != null) {
+                    val updated = releaseDateSyncService.updateIfChanged(existing, book.parsedReleaseDateFromHardcover, "Hardcover")
+                    results.add(mediaMapper.toResponse(updated))
+                    continue
+                }
+
+                val mediaItem = book.toMediaItemFromHardcover()
+                val saved = mediaItemRepository.save(mediaItem)
+
+                val author = book.contributions.firstOrNull()?.author
+                if (author == null) {
+                    log.warn("Hardcover book {} had no linked author, skipping credit", book.id)
+                } else {
+                    linkCredit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
+                }
+                mediaEventPublisher.publishIfUpcoming(saved)
+                results.add(mediaMapper.toResponse(saved))
+            } catch (ex: Exception) {
+                log.error("Failed to process Hardcover book {} - {}, skipping it this run", book.id, book.title, ex)
+            }
+        }
+
+        log.info("Book sync: {} fetched from Hardcover", books.size)
+        return results
+    }
+
+    // Shared find-or-create for a person credited on a media item (artist, author, ...)
+    private fun linkCredit(mediaItem: MediaItem, source: ExternalSourceType, externalId: String, name: String, role: RoleType) {
+        val contributor = contributorRepository.findByExternalSourceAndExternalSourceId(source, externalId)
+            ?: contributorRepository.save(
+                Contributor(
+                    contributorType = ContributorType.PERSON,
+                    name = name,
+                    externalSource = source,
+                    externalSourceId = externalId,
+                )
+            )
+
+        creditRepository.save(Credit(mediaItem = mediaItem, contributor = contributor, role = role))
     }
 
     override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {

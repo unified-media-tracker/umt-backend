@@ -1,11 +1,13 @@
 package com.umt.core.media.tmdb
 
 import com.umt.api.generated.model.MediaItemResponse
+import com.umt.core.contribution.RoleType
+import com.umt.core.media.ContributorCreditService
 import com.umt.core.media.ExternalSourceType
 import com.umt.core.media.MediaEventPublisher
 import com.umt.core.media.MediaItem
-import com.umt.core.media.MediaMapper
 import com.umt.core.media.MediaRepository
+import com.umt.core.media.MediaResponseAssembler
 import com.umt.core.media.MovieDetails
 import com.umt.core.media.MovieDetailsRepository
 import com.umt.core.media.ReleaseDateSyncService
@@ -30,7 +32,7 @@ class TmdbCatalogImporter(
     private val movieDetailsRepository: MovieDetailsRepository,
     private val genreRepository: GenreRepository,
     private val tmdbClient: TmdbClient,
-    private val mediaMapper: MediaMapper,
+    private val mediaResponseAssembler: MediaResponseAssembler,
     private val mediaEventPublisher: MediaEventPublisher,
     private val releaseDateSyncService: ReleaseDateSyncService,
     private val contributorCreditService: ContributorCreditService,
@@ -49,11 +51,9 @@ class TmdbCatalogImporter(
         movieDetailsRepository.save(MovieDetails(mediaItem = saved, runtimeMinutes = tmdbMovie.runtime))
         creditMovieCrew(saved, tmdbMovie.credits?.crew ?: emptyList())
 
-        return mediaMapper.toResponse(saved)
+        return mediaResponseAssembler.assemble(saved)
     }
 
-    // No TvDetails table — unlike movies (runtime) and games (platforms), there's nothing
-    // TV-specific to store yet at MVP scope; add one later if that changes.
     @Transactional
     fun importTvShow(tmdbId: Long): MediaItemResponse {
         val existing = findExisting(tmdbId)
@@ -62,14 +62,35 @@ class TmdbCatalogImporter(
         existing?.let { return updateExisting(it, tmdbShow.parsedReleaseDate) }
 
         val saved = createAndSave(tmdbShow.toMediaItem(), tmdbShow.genres)
-        return mediaMapper.toResponse(saved)
+        // TMDb has no "creator" role of its own in our vocabulary — DIRECTOR is the closest
+        // existing fit for "the person(s) who made this show" rather than adding a new role
+        // just for this one field.
+        tmdbShow.createdBy.forEach {
+            contributorCreditService.credit(saved, ExternalSourceType.TMDB, it.id.toString(), it.name, RoleType.DIRECTOR)
+        }
+
+        return mediaResponseAssembler.assemble(saved)
+    }
+
+    // TMDb's crew list has one entry per job (a person can appear multiple times under
+    // different jobs/departments), so this can credit the same person twice with different
+    // roles — that's correct, not a bug.
+    private fun creditMovieCrew(mediaItem: MediaItem, crew: List<TmdbCrewMember>) {
+        crew.filter { it.job == "Director" }.forEach {
+            contributorCreditService.credit(mediaItem, ExternalSourceType.TMDB, it.id.toString(), it.name, RoleType.DIRECTOR)
+        }
+        crew.filter { it.department == "Writing" }
+            .distinctBy { it.id }
+            .forEach {
+                contributorCreditService.credit(mediaItem, ExternalSourceType.TMDB, it.id.toString(), it.name, RoleType.WRITER)
+            }
     }
 
     private fun findExisting(tmdbId: Long): MediaItem? =
         mediaItemRepository.findByExternalSourceAndExternalSourceId(ExternalSourceType.TMDB, tmdbId.toString())
 
     private fun updateExisting(existing: MediaItem, incomingDate: LocalDate?): MediaItemResponse =
-        mediaMapper.toResponse(releaseDateSyncService.updateIfChanged(existing, incomingDate, "TMDb"))
+        mediaResponseAssembler.assemble(releaseDateSyncService.updateIfChanged(existing, incomingDate, "TMDb"))
 
     private fun createAndSave(mediaItem: MediaItem, genres: List<TmdbGenre>): MediaItem {
         mediaItem.genres = resolveGenres(genres)

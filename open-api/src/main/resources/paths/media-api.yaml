@@ -196,6 +196,42 @@ components:
           items:
             $ref: '#/components/schemas/GenreResponse'
           default: []
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributorResponse'
+          default: []
+
+    ContributorResponse:
+      type: object
+      required: [id, name, contributorType, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contributorType:
+          $ref: '#/components/schemas/ContributorType'
+        role:
+          $ref: '#/components/schemas/RoleType'
+
+    ContributorType:
+      type: string
+      enum:
+        - PERSON
+        - ORGANIZATION
+
+    RoleType:
+      type: string
+      enum:
+        - DIRECTOR
+        - DEVELOPER
+        - AUTHOR
+        - ARTIST
+        - WRITER
+        - STUDIO
+        - PUBLISHER
 
     GenreResponse:
       type: object

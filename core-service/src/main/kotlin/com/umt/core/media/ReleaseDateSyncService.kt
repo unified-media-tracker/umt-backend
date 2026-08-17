@@ -25,8 +25,6 @@ class ReleaseDateSyncService(
         if (incomingDate == null) return existing
 
         val previousDate = existing.releaseDate
-        // LocalDate.isEqual, not ==, to compare by value unambiguously rather than relying on
-        // == resolving to equals() for a nullable reference type.
         if (previousDate != null && previousDate.isEqual(incomingDate)) return existing
 
         existing.releaseDate = incomingDate

@@ -116,7 +116,7 @@ class MediaServiceImpl(
                 if (artistRef == null) {
                     log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
                 } else {
-                    linkCredit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
+                    contributorCreditService.credit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
                 }
                 mediaEventPublisher.publishIfUpcoming(saved)
                 results.add(mediaMapper.toResponse(saved))
@@ -150,6 +150,22 @@ class MediaServiceImpl(
                 val mediaItem = game.toMediaItemFromIgdb()
                 val saved = mediaItemRepository.save(mediaItem)
 
+                game.involvedCompanies.forEach { involved ->
+                    val company = involved.company ?: return@forEach
+                    if (involved.developer) {
+                        contributorCreditService.credit(
+                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
+                            RoleType.DEVELOPER, ContributorType.ORGANIZATION,
+                        )
+                    }
+                    if (involved.publisher) {
+                        contributorCreditService.credit(
+                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
+                            RoleType.PUBLISHER, ContributorType.ORGANIZATION,
+                        )
+                    }
+                }
+
                 mediaEventPublisher.publishIfUpcoming(saved)
                 results.add(mediaMapper.toResponse(saved))
             } catch (ex: Exception) {
@@ -179,11 +195,11 @@ class MediaServiceImpl(
                 val mediaItem = book.toMediaItemFromHardcover()
                 val saved = mediaItemRepository.save(mediaItem)
 
-                val author = book.contributions.firstOrNull()?.author
+                val author = book.primaryAuthor
                 if (author == null) {
                     log.warn("Hardcover book {} had no linked author, skipping credit", book.id)
                 } else {
-                    linkCredit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
+                    contributorCreditService.credit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
                 }
                 mediaEventPublisher.publishIfUpcoming(saved)
                 results.add(mediaMapper.toResponse(saved))

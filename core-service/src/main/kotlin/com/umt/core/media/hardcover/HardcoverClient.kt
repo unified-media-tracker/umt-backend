@@ -33,6 +33,7 @@ class HardcoverClient(
                     image { url }
                     contributions {
                       author { id name }
+                      contribution
                     }
                   }
                 }

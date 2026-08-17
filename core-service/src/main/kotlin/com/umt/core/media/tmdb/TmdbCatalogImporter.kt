@@ -33,6 +33,7 @@ class TmdbCatalogImporter(
     private val mediaMapper: MediaMapper,
     private val mediaEventPublisher: MediaEventPublisher,
     private val releaseDateSyncService: ReleaseDateSyncService,
+    private val contributorCreditService: ContributorCreditService,
 ) {
 
     // Fetching full details even for an already-known movie is deliberate: it's the only way
@@ -46,6 +47,7 @@ class TmdbCatalogImporter(
 
         val saved = createAndSave(tmdbMovie.toMediaItem(), tmdbMovie.genres)
         movieDetailsRepository.save(MovieDetails(mediaItem = saved, runtimeMinutes = tmdbMovie.runtime))
+        creditMovieCrew(saved, tmdbMovie.credits?.crew ?: emptyList())
 
         return mediaMapper.toResponse(saved)
     }

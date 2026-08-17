@@ -27,8 +27,9 @@ data class HardcoverBook(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HardcoverImage(val url: String?)
 
+// contribution is null, for the primary author, or a string like "Illustrator"/"Translator"
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class HardcoverContribution(val author: HardcoverAuthor?)
+data class HardcoverContribution(val author: HardcoverAuthor?, val contribution: String?)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HardcoverAuthor(val id: Long, val name: String)

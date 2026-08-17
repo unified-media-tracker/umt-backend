@@ -38,7 +38,8 @@ class IgdbClient(
 
         while (true) {
             val query = """
-                fields name, first_release_date, summary, cover.image_id;
+                fields name, first_release_date, summary, cover.image_id,
+                    involved_companies.company.name, involved_companies.developer, involved_companies.publisher;
                 where first_release_date > $now & (category = 0 | category = null);
                 sort first_release_date asc;
                 limit $pageSize;

@@ -9,6 +9,12 @@ import java.time.LocalDate
 val HardcoverBook.parsedReleaseDate: LocalDate?
     get() = releaseDate?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
+// contribution == null marks the primary author;
+// falls back to the first credited contributor if a book has none marked that way, rather than crediting nobody.
+val HardcoverBook.primaryAuthor: HardcoverAuthor?
+    get() = contributions.firstOrNull { it.contribution == null }?.author
+        ?: contributions.firstOrNull()?.author
+
 fun HardcoverBook.toMediaItem(): MediaItem {
     val date = parsedReleaseDate
 

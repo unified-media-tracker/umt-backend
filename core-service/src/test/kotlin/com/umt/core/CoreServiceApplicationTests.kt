@@ -7,18 +7,19 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.RabbitMQContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 /**
- * Boots the whole application against a throwaway PostgreSQL container.
+ * Boots the whole application against throwaway PostgreSQL and RabbitMQ containers.
  *
  * Deliberately not H2: V1__init.sql uses native `CREATE TYPE ... AS ENUM` and
  * `gen_random_uuid()`, and the entities map those enums with @JdbcTypeCode(NAMED_ENUM). On H2
  * the migration would have to be rewritten, which would mean testing a schema we never ship.
  * Real Postgres keeps the test honest.
  *
- * `ddl-auto: validate` is what gives this test teeth — Hibernate compares every entity mapping
+ * `ddl-auto: validate` makes this test do this — Hibernate compares every entity mapping
  * against the schema Flyway just built, so a column renamed in one place and not the other
  * fails here instead of in production.
  *
@@ -28,8 +29,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest(
     properties = [
         "spring.jpa.hibernate.ddl-auto=validate",
-        // RabbitAdmin opens a real connection on context refresh to declare queues
-        "spring.rabbitmq.dynamic=false",
         // no catalog calls happen during a context load, but the properties still have to bind
         "tmdb.api-key=test",
         "igdb.client-id=test",
@@ -44,6 +43,11 @@ class CoreServiceApplicationTests {
         @ServiceConnection
         @JvmStatic
         val postgres = PostgreSQLContainer("postgres:16-alpine")
+
+        @Container
+        @ServiceConnection
+        @JvmStatic
+        val rabbitmq = RabbitMQContainer("rabbitmq:3.13-alpine")
     }
 
     /**

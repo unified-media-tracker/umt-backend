@@ -100,6 +100,22 @@ syncUpcomingGames:
               items:
                 $ref: '#/components/schemas/MediaItemResponse'
 
+syncUpcomingBooks:
+  post:
+    tags: [Media]
+    operationId: syncUpcomingBooks
+    summary: "Sync upcoming books from Hardcover"
+    description: "Queries Hardcover's GraphQL API for books with a future release_date and imports them, crediting authors. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
 getRecommendations:
   post:
     tags: [Media]
@@ -180,6 +196,42 @@ components:
           items:
             $ref: '#/components/schemas/GenreResponse'
           default: []
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributorResponse'
+          default: []
+
+    ContributorResponse:
+      type: object
+      required: [id, name, contributorType, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contributorType:
+          $ref: '#/components/schemas/ContributorType'
+        role:
+          $ref: '#/components/schemas/RoleType'
+
+    ContributorType:
+      type: string
+      enum:
+        - PERSON
+        - ORGANIZATION
+
+    RoleType:
+      type: string
+      enum:
+        - DIRECTOR
+        - DEVELOPER
+        - AUTHOR
+        - ARTIST
+        - WRITER
+        - STUDIO
+        - PUBLISHER
 
     GenreResponse:
       type: object
@@ -217,6 +269,7 @@ components:
         - TMDB
         - IGDB
         - MUSICBRAINZ
+        - HARDCOVER
 
     MediaItemRequest:
       type: object

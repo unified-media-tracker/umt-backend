@@ -20,10 +20,10 @@ interface MediaRepository : JpaRepository<MediaItem, UUID> {
     // album is still caught here and can be compared/updated without spending a
     // MusicBrainz call just to find the same MBID again.
     @EntityGraph(attributePaths = ["genres"])
-    fun findFirstByMediaTypeAndTitleIgnoreCase(
+    fun findByMediaTypeAndTitleIgnoreCase(
         mediaType: MediaType,
         title: String,
-    ): MediaItem?
+    ): List<MediaItem>
 
     @Query("""
         SELECT m FROM MediaItem m

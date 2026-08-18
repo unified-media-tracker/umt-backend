@@ -13,10 +13,25 @@ data class TmdbMovieResponse(
     @JsonProperty("release_date") val releaseDate: String?,
     val runtime: Int?,
     val genres: List<TmdbGenre>,
+    // Only present when the request used append_to_response=credits (see TmdbClient.fetchMovie).
+    val credits: TmdbCredits? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TmdbGenre(
     val id: Long,
     val name: String,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TmdbCredits(
+    val crew: List<TmdbCrewMember> = emptyList(),
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TmdbCrewMember(
+    val id: Long,
+    val name: String,
+    val job: String,
+    val department: String,
 )

@@ -1,13 +1,17 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.MediaItemResponse
-import com.umt.core.contribution.*
+import com.umt.core.contribution.ContributorType
+import com.umt.core.contribution.RoleType
+import com.umt.core.media.hardcover.HardcoverClient
+import com.umt.core.media.hardcover.parsedReleaseDate as parsedReleaseDateFromHardcover
+import com.umt.core.media.hardcover.primaryAuthor
+import com.umt.core.media.hardcover.toMediaItem as toMediaItemFromHardcover
 import com.umt.core.media.igdb.IgdbClient
 import com.umt.core.media.igdb.parsedReleaseDate as parsedReleaseDateFromIgdb
 import com.umt.core.media.igdb.toMediaItem as toMediaItemFromIgdb
 import com.umt.core.media.metacritic.MetacriticAlbumsClient
 import com.umt.core.media.musicbrainz.MusicBrainzClient
-import com.umt.core.media.musicbrainz.MusicBrainzReleaseGroup
 import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
 import com.umt.core.media.tmdb.TmdbCatalogImporter
 import com.umt.core.media.tmdb.TmdbClient
@@ -17,16 +21,16 @@ import org.springframework.stereotype.Service
 @Service
 class MediaServiceImpl(
     private val mediaItemRepository: MediaRepository,
-    private val contributorRepository: ContributorRepository,
-    private val creditRepository: CreditRepository,
     private val tmdbClient: TmdbClient,
     private val tmdbCatalogImporter: TmdbCatalogImporter,
     private val metacriticAlbumsClient: MetacriticAlbumsClient,
-    private val igdbClient: IgdbClient,
     private val musicBrainzClient: MusicBrainzClient,
+    private val igdbClient: IgdbClient,
+    private val hardcoverClient: HardcoverClient,
     private val mediaEventPublisher: MediaEventPublisher,
     private val releaseDateSyncService: ReleaseDateSyncService,
-    private val mediaMapper: MediaMapper,
+    private val contributorCreditService: ContributorCreditService,
+    private val mediaResponseAssembler: MediaResponseAssembler,
 ) : MediaService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -83,12 +87,12 @@ class MediaServiceImpl(
                 // Matched by title only (not title+date): a date change on an already-known
                 // album still hits this branch, so it can be compared/updated without spending
                 // a throttled MusicBrainz call just to re-discover the same MBID.
-                val existingAlbum = mediaItemRepository.findFirstByMediaTypeAndTitleIgnoreCase(
+                val existingAlbum = mediaItemRepository.findByMediaTypeAndTitleIgnoreCase(
                     MediaType.MUSIC, candidate.title,
-                )
+                ).firstOrNull()
                 if (existingAlbum != null) {
                     val updated = releaseDateSyncService.updateIfChanged(existingAlbum, candidate.releaseDate, "Metacritic")
-                    results.add(mediaMapper.toResponse(updated))
+                    results.add(mediaResponseAssembler.assemble(updated))
                     continue
                 }
 
@@ -108,9 +112,14 @@ class MediaServiceImpl(
                 val mediaItem = match.toMediaItemFromMusicBrainz(candidate.releaseDate)
                 val saved = mediaItemRepository.save(mediaItem)
 
-                linkArtistCredit(match, saved)
+                val artistRef = match.artistCredit.firstOrNull()?.artist
+                if (artistRef == null) {
+                    log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
+                } else {
+                    contributorCreditService.credit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
+                }
                 mediaEventPublisher.publishIfUpcoming(saved)
-                results.add(mediaMapper.toResponse(saved))
+                results.add(mediaResponseAssembler.assemble(saved))
             } catch (ex: Exception) {
                 log.error("Failed to process candidate {} - {}, skipping it this run", candidate.artist, candidate.title, ex)
             }
@@ -118,29 +127,6 @@ class MediaServiceImpl(
 
         log.info("Album sync: {} discovered from Metacritic", discovered.size)
         return results
-    }
-
-    // Find-or-create the artist by MusicBrainz artist MBID (not by name — see Contributor's
-    // externalSource comment) and credit them on this album, so an artist profile page can
-    // later just query Credit by contributor instead of matching album titles by name.
-    private fun linkArtistCredit(match: MusicBrainzReleaseGroup, mediaItem: MediaItem) {
-        val artistRef = match.artistCredit.firstOrNull()?.artist ?: run {
-            log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
-            return
-        }
-
-        val contributor = contributorRepository.findByExternalSourceAndExternalSourceId(
-            ExternalSourceType.MUSICBRAINZ, artistRef.id,
-        ) ?: contributorRepository.save(
-            Contributor(
-                contributorType = ContributorType.PERSON,
-                name = artistRef.name,
-                externalSource = ExternalSourceType.MUSICBRAINZ,
-                externalSourceId = artistRef.id,
-            )
-        )
-
-        creditRepository.save(Credit(mediaItem = mediaItem, contributor = contributor, role = RoleType.ARTIST))
     }
 
     // IGDB is both the discovery and the identity source in one call (unlike the Metacritic+
@@ -157,15 +143,31 @@ class MediaServiceImpl(
                 )
                 if (existing != null) {
                     val updated = releaseDateSyncService.updateIfChanged(existing, game.parsedReleaseDateFromIgdb, "IGDB")
-                    results.add(mediaMapper.toResponse(updated))
+                    results.add(mediaResponseAssembler.assemble(updated))
                     continue
                 }
 
                 val mediaItem = game.toMediaItemFromIgdb()
                 val saved = mediaItemRepository.save(mediaItem)
 
+                game.involvedCompanies.forEach { involved ->
+                    val company = involved.company ?: return@forEach
+                    if (involved.developer) {
+                        contributorCreditService.credit(
+                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
+                            RoleType.DEVELOPER, ContributorType.ORGANIZATION,
+                        )
+                    }
+                    if (involved.publisher) {
+                        contributorCreditService.credit(
+                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
+                            RoleType.PUBLISHER, ContributorType.ORGANIZATION,
+                        )
+                    }
+                }
+
                 mediaEventPublisher.publishIfUpcoming(saved)
-                results.add(mediaMapper.toResponse(saved))
+                results.add(mediaResponseAssembler.assemble(saved))
             } catch (ex: Exception) {
                 log.error("Failed to process IGDB game {} - {}, skipping it this run", game.id, game.name, ex)
             }
@@ -175,8 +177,43 @@ class MediaServiceImpl(
         return results
     }
 
+    override fun syncUpcomingBooks(): List<MediaItemResponse> {
+        val books = hardcoverClient.fetchUpcomingBooks()
+        val results = mutableListOf<MediaItemResponse>()
+
+        for (book in books) {
+            try {
+                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
+                    ExternalSourceType.HARDCOVER, book.id.toString(),
+                )
+                if (existing != null) {
+                    val updated = releaseDateSyncService.updateIfChanged(existing, book.parsedReleaseDateFromHardcover, "Hardcover")
+                    results.add(mediaResponseAssembler.assemble(updated))
+                    continue
+                }
+
+                val mediaItem = book.toMediaItemFromHardcover()
+                val saved = mediaItemRepository.save(mediaItem)
+
+                val author = book.primaryAuthor
+                if (author == null) {
+                    log.warn("Hardcover book {} had no linked author, skipping credit", book.id)
+                } else {
+                    contributorCreditService.credit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
+                }
+                mediaEventPublisher.publishIfUpcoming(saved)
+                results.add(mediaResponseAssembler.assemble(saved))
+            } catch (ex: Exception) {
+                log.error("Failed to process Hardcover book {} - {}, skipping it this run", book.id, book.title, ex)
+            }
+        }
+
+        log.info("Book sync: {} fetched from Hardcover", books.size)
+        return results
+    }
+
     override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
-        return mediaMapper.toListResponse(
+        return mediaResponseAssembler.assembleList(
             mediaItems = mediaItemRepository.fndRandomMediaItemsLimit(RANDOM_MEDIA_ITEMS_LIMIT)
         )
     }

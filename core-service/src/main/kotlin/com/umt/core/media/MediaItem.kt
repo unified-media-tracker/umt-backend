@@ -12,7 +12,7 @@ import java.util.UUID
 
 enum class MediaType { MOVIE, TV_SHOW, GAME, BOOK, MUSIC }
 enum class ReleaseStatus { TBA, ANNOUNCED, RUMORED, CONFIRMED, DELAYED, RELEASED, CANCELED }
-enum class ExternalSourceType { TMDB, IGDB, MUSICBRAINZ }
+enum class ExternalSourceType { TMDB, IGDB, MUSICBRAINZ, HARDCOVER }
 
 @Entity
 @Table(name = MediaItem.TABLE_NAME)

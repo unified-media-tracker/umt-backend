@@ -9,9 +9,11 @@ class TmdbClient(
     private val tmdbRestClient: RestClient
 ) {
 
+    // append_to_response bundles crew (for director/writer credits) into the same request -
+    // no extra API call or added cost, TMDb explicitly supports this for exactly this reason.
     fun fetchMovie(tmdbId: Long): TmdbMovieResponse =
         tmdbRestClient.get()
-            .uri("/movie/{id}", tmdbId)
+            .uri { it.path("/movie/{id}").queryParam("append_to_response", "credits").build(tmdbId) }
             .retrieve()
             .body(TmdbMovieResponse::class.java)
             ?: error("TMDB returned empty body for movie $tmdbId")

@@ -36,6 +36,10 @@ class MediaController(private val mediaService: MediaService) : MediaApi {
     override fun syncUpcomingGames(): ResponseEntity<List<MediaItemResponse>> =
         ResponseEntity.ok(mediaService.syncUpcomingGames())
 
+    @PreAuthorize("hasRole('ADMIN')")
+    override fun syncUpcomingBooks(): ResponseEntity<List<MediaItemResponse>> =
+        ResponseEntity.ok(mediaService.syncUpcomingBooks())
+
     @PreAuthorize("hasRole('USER')")
     override fun getRecommendations(@RequestBody mediaItemRequest: MediaItemRequest): ResponseEntity<List<MediaItemResponse>> =
         ResponseEntity.ok(mediaService.getUserRecommendations(userId = mediaItemRequest.userId))

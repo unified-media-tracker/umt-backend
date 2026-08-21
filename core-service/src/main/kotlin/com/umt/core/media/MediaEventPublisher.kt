@@ -14,7 +14,10 @@ class MediaEventPublisher(private val rabbitTemplate: RabbitTemplate) {
         rabbitTemplate.convertAndSend(
             RabbitMQConfig.EVENTS_EXCHANGE,
             RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
-            MediaImportedEvent(mediaItemId = id, title = mediaItem.title),
+            MediaImportedEvent(
+                mediaItemId = id, title = mediaItem.title, mediaType = mediaItem.mediaType,
+                releaseDate = mediaItem.releaseDate,
+            ),
         )
     }
 }

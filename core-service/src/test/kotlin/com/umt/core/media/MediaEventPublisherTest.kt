@@ -33,11 +33,13 @@ class MediaEventPublisherTest {
         id: UUID? = UUID.randomUUID(),
         status: ReleaseStatus = ReleaseStatus.ANNOUNCED,
         title: String = "Silksong",
+        mediaType: MediaType = MediaType.GAME,
+        releaseDate: LocalDate? = LocalDate.of(2026, 12, 1),
     ) = MediaItem(
         id = id,
-        mediaType = MediaType.GAME,
+        mediaType = mediaType,
         title = title,
-        releaseDate = LocalDate.of(2026, 12, 1),
+        releaseDate = releaseDate,
         releaseDateStatus = status,
         popularityScore = BigDecimal.ONE,
         externalSource = ExternalSourceType.IGDB,
@@ -48,7 +50,9 @@ class MediaEventPublisherTest {
     fun `publishes an upcoming item to the events exchange with the media-imported routing key`() {
         val id = UUID.randomUUID()
 
-        publisher.publishIfUpcoming(mediaItem(id = id, title = "Silksong"))
+        publisher.publishIfUpcoming(
+            mediaItem(id = id, title = "Silksong", mediaType = MediaType.GAME, releaseDate = LocalDate.of(2026, 12, 1)),
+        )
 
         val payload = slot<MediaImportedEvent>()
         verify(exactly = 1) {
@@ -60,6 +64,19 @@ class MediaEventPublisherTest {
         }
         assertEquals(id, payload.captured.mediaItemId)
         assertEquals("Silksong", payload.captured.title)
+        assertEquals(MediaType.GAME, payload.captured.mediaType)
+        assertEquals(LocalDate.of(2026, 12, 1), payload.captured.releaseDate)
+    }
+
+    @Test
+    fun `publishes a null release date as-is for a TBA item`() {
+        publisher.publishIfUpcoming(mediaItem(releaseDate = null))
+
+        val payload = slot<MediaImportedEvent>()
+        verify(exactly = 1) {
+            rabbitTemplate.convertAndSend(any<String>(), any<String>(), capture(payload))
+        }
+        assertEquals(null, payload.captured.releaseDate)
     }
 
     @Test

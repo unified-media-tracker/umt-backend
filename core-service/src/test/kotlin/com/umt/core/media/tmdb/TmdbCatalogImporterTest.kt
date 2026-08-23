@@ -12,8 +12,8 @@ import com.umt.core.media.MediaItem
 import com.umt.core.media.MediaRepository
 import com.umt.core.media.MediaResponseAssembler
 import com.umt.core.media.MediaType
-import com.umt.core.media.MovieDetails
-import com.umt.core.media.MovieDetailsRepository
+import com.umt.core.media.movie.MovieDetails
+import com.umt.core.media.movie.MovieDetailsRepository
 import com.umt.core.media.ReleaseDateSyncService
 import com.umt.core.media.genre.Genre
 import com.umt.core.media.genre.GenreRepository

@@ -51,6 +51,8 @@ dependencies {
 
     implementation(project(":shared"))
     implementation(project(":open-api"))
+
+    implementation("io.arrow-kt:arrow-core:2.2.3")
 }
 
 kotlin {

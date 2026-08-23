@@ -1,22 +1,3 @@
-importMovieFromTmdb:
-  post:
-    tags: [Media]
-    operationId: importMovieFromTmdb
-    summary: "Import movie from TMDB"
-    description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
-    parameters:
-      - name: tmdbId
-        in: path
-        required: true
-        schema: { type: integer, format: int64 }
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MediaItemResponse'
-
 importTvShowFromTmdb:
   post:
     tags: [Media]
@@ -34,23 +15,7 @@ importTvShowFromTmdb:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MediaItemResponse'
-
-syncUpcomingMovies:
-  post:
-    tags: [Media]
-    operationId: syncUpcomingMovies
-    summary: "Sync upcoming movies from TMDB"
-    description: "Queries TMDB's /movie/upcoming and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/MediaItemResponse'
+              $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
 
 syncUpcomingTvSeries:
   post:
@@ -66,7 +31,7 @@ syncUpcomingTvSeries:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MediaItemResponse'
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
 
 syncUpcomingAlbums:
   post:
@@ -82,7 +47,7 @@ syncUpcomingAlbums:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MediaItemResponse'
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
 
 syncUpcomingGames:
   post:
@@ -98,7 +63,7 @@ syncUpcomingGames:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MediaItemResponse'
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
 
 syncUpcomingBooks:
   post:
@@ -114,7 +79,7 @@ syncUpcomingBooks:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MediaItemResponse'
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
 
 getRecommendations:
   post:
@@ -127,7 +92,7 @@ getRecommendations:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/MediaItemRequest'
+            $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemRequest'
     responses:
       '200':
         description: OK
@@ -136,145 +101,4 @@ getRecommendations:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MediaItemResponse'
-
-components:
-  schemas:
-    MediaItemResponse:
-      type: object
-      required:
-        - id
-        - mediaType
-        - title
-        - releaseDateStatus
-        - popularityScore
-        - ratingCount
-        - externalSource
-        - externalSourceId
-      properties:
-        id:
-          type: string
-          format: uuid
-        mediaType:
-          $ref: '#/components/schemas/MediaType'
-        title:
-          type: string
-        description:
-          type: string
-          nullable: true
-        coverImageUrl:
-          type: string
-          nullable: true
-        ageRating:
-          type: string
-          nullable: true
-        releaseDate:
-          type: string
-          format: date
-          nullable: true
-        releaseDateStatus:
-          $ref: '#/components/schemas/ReleaseStatus'
-        popularityScore:
-          type: number
-        averageUserRating:
-          type: number
-          nullable: true
-        ratingCount:
-          type: integer
-          format: int32
-        franchiseId:
-          type: string
-          format: uuid
-          nullable: true
-        externalSource:
-          $ref: '#/components/schemas/ExternalSourceType'
-        externalSourceId:
-          type: string
-        genres:
-          type: array
-          uniqueItems: true
-          items:
-            $ref: '#/components/schemas/GenreResponse'
-          default: []
-        contributors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContributorResponse'
-          default: []
-
-    ContributorResponse:
-      type: object
-      required: [id, name, contributorType, role]
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        contributorType:
-          $ref: '#/components/schemas/ContributorType'
-        role:
-          $ref: '#/components/schemas/RoleType'
-
-    ContributorType:
-      type: string
-      enum:
-        - PERSON
-        - ORGANIZATION
-
-    RoleType:
-      type: string
-      enum:
-        - DIRECTOR
-        - DEVELOPER
-        - AUTHOR
-        - ARTIST
-        - WRITER
-        - STUDIO
-        - PUBLISHER
-
-    GenreResponse:
-      type: object
-      required: [id, name]
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-
-    MediaType:
-      type: string
-      enum:
-        - MOVIE
-        - GAME
-        - BOOK
-        - MUSIC
-        - TV_SHOW
-
-    ReleaseStatus:
-      type: string
-      enum:
-        - TBA
-        - ANNOUNCED
-        - RUMORED
-        - CONFIRMED
-        - DELAYED
-        - RELEASED
-        - CANCELED
-
-    ExternalSourceType:
-      type: string
-      enum:
-        - TMDB
-        - IGDB
-        - MUSICBRAINZ
-        - HARDCOVER
-
-    MediaItemRequest:
-      type: object
-      required: [userId]
-      properties:
-        userId:
-          type: integer
-          format: int64
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'

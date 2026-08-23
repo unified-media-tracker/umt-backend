@@ -5,17 +5,16 @@ info:
 
 tags:
   - name: Media
-    description: Operations related to media items (movies, games, etc.)
+    description: Operations related to all media items
+  - name: Movie
+    description: Operations related to movies
   - name: User
     description: Operations related to users
 
 paths:
-  /api/core/media/import/tmdb/movie/{tmdbId}:
-    $ref: './paths/media-api.yaml#/importMovieFromTmdb'
+  # media
   /api/core/media/import/tmdb/tv/{tmdbId}:
     $ref: './paths/media-api.yaml#/importTvShowFromTmdb'
-  /api/core/media/sync/upcoming-movies:
-    $ref: './paths/media-api.yaml#/syncUpcomingMovies'
   /api/core/media/sync/upcoming-tv-series:
     $ref: './paths/media-api.yaml#/syncUpcomingTvSeries'
   /api/core/media/sync/upcoming-albums:
@@ -26,6 +25,14 @@ paths:
     $ref: './paths/media-api.yaml#/syncUpcomingBooks'
   /api/core/media/recommendations:
     $ref: './paths/media-api.yaml#/getRecommendations'
+  # movie
+  /api/core/movie/sync/upcoming-movies:
+    $ref: './paths/movie-api.yaml#/syncUpcomingMovies'
+  /api/core/movie/import/tmdb/movie/{tmdbId}:
+    $ref: './paths/movie-api.yaml#/importMovieFromTmdb'
+  /api/core/movie/{id}:
+    $ref: './paths/movie-api.yaml#/getMovieDetails'
+  # user
   /api/core/user/all:
     $ref: './paths/user-api.yaml#/getAllUsers'
   /api/core/user/create:

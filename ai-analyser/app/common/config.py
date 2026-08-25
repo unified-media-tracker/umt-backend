@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     rabbitmq_user: str = "umt"
     rabbitmq_password: str = "umt"
     log_level: str = "INFO"
+    youtube_api_key: str = ""
 
     class Config:
         env_file = ".env"

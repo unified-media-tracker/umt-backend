@@ -134,3 +134,54 @@ class TestConfidenceNormalisation:
             confidence=raw,
         )
         assert evaluation.confidence == pytest.approx(expected)
+
+
+class TestExtractedReleaseDateNormalisation:
+    """
+    A local model asked for a date routinely answers in prose ("around Q3 2027") or gets the
+    format slightly wrong - that must null the field, not reject the whole evaluation the way
+    confidence rescaling avoids rejecting over a bad number.
+    """
+
+    def _evaluation(self, extracted_release_date):
+        return PostEvaluation(
+            reasoning="r",
+            sentiment_score=0.2,
+            mentions_delay=False,
+            info_type=InformationType.RELEASE_DATE_CHANGE,
+            confidence=0.9,
+            extracted_release_date=extracted_release_date,
+        )
+
+    def test_a_valid_iso_date_is_kept(self):
+        assert self._evaluation("2027-03-15").extracted_release_date == "2027-03-15"
+
+    def test_none_stays_none(self):
+        assert self._evaluation(None).extracted_release_date is None
+
+    def test_defaults_to_none_when_omitted(self):
+        evaluation = PostEvaluation(
+            reasoning="r", sentiment_score=0.2, mentions_delay=False,
+            info_type=InformationType.RELEASE_DATE_CHANGE, confidence=0.9,
+        )
+        assert evaluation.extracted_release_date is None
+
+    @pytest.mark.parametrize("bad_value", ["around Q3 2027", "next year", "2027-13-40", "", "   "])
+    def test_a_malformed_or_vague_value_is_nulled_not_rejected(self, bad_value):
+        assert self._evaluation(bad_value).extracted_release_date is None
+
+    @patch("app.analysis.llm_evaluator.requests.post")
+    def test_evaluate_post_surfaces_the_extracted_date(self, post):
+        payload = """{
+            "reasoning": "The studio confirmed the date.",
+            "sentiment_score": 0.5,
+            "mentions_delay": false,
+            "info_type": "release_date_change",
+            "confidence": 0.9,
+            "extracted_release_date": "2027-06-01"
+        }"""
+        post.return_value = ollama_response(payload)
+
+        result = evaluate_post("Hollow Knight: Silksong", "It's official: June 1st, 2027.")
+
+        assert result.extracted_release_date == "2027-06-01"

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Numeric, DateTime, Boolean, Enum
+from sqlalchemy import Column, String, Numeric, DateTime, Date, Boolean, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
@@ -21,6 +21,7 @@ class RumorSignal(Base):
     mentions_delay = Column(Boolean, nullable=False)
     info_type = Column(Enum(InformationType, name="information_type_enum"), nullable=False)
     evaluation_confidence = Column(Numeric, nullable=False)
+    extracted_release_date = Column(Date, nullable=True)
     published_at = Column(DateTime, nullable=False)
     ingested_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
 

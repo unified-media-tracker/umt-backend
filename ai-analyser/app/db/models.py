@@ -35,3 +35,12 @@ class SourceReputation(Base):
     reasoning = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, nullable=False,default=datetime.now(timezone.utc))
+
+class RumorTrendSnapshot(Base):
+    __tablename__ = "rumor_trend_snapshot"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    media_item_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    delay_probability = Column(Numeric, nullable=False)
+    signal_count = Column(Numeric, nullable=False)
+    computed_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))

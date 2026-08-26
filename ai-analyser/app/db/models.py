@@ -23,7 +23,7 @@ class RumorSignal(Base):
     evaluation_confidence = Column(Numeric, nullable=False)
     extracted_release_date = Column(Date, nullable=True)
     published_at = Column(DateTime, nullable=False)
-    ingested_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    ingested_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 class SourceReputation(Base):
     __tablename__ = "source_reputation"
@@ -33,8 +33,8 @@ class SourceReputation(Base):
     reputation_score = Column(Numeric, nullable=False)
     is_curated = Column(Boolean, nullable=False, default=False)
     reasoning = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, nullable=False,default=datetime.now(timezone.utc))
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False,default=lambda: datetime.now(timezone.utc))
 
 class RumorTrendSnapshot(Base):
     __tablename__ = "rumor_trend_snapshot"
@@ -43,4 +43,4 @@ class RumorTrendSnapshot(Base):
     media_item_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     delay_probability = Column(Numeric, nullable=False)
     signal_count = Column(Numeric, nullable=False)
-    computed_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
+    computed_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))

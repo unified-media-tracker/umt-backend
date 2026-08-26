@@ -65,4 +65,48 @@ class TmdbClientTest {
     fun `TmdbCredits defaults crew to an empty list when omitted`() {
         assertTrue(TmdbCredits().crew.isEmpty())
     }
+
+    private fun discoveryPage(totalPages: Int, ids: List<Long>) = """
+        {"total_pages": $totalPages, "results": [${ids.joinToString(",") { """{"id": $it}""" }}]}
+    """.trimIndent()
+
+    @Test
+    fun `fetchUpcomingMovieIds stops after a single page when total_pages is 1`() {
+        server.expect(times(1), requestTo("$BASE_URL/movie/upcoming?region=US&page=1"))
+            .andExpect(method(HttpMethod.GET))
+            .andRespond(withSuccess(discoveryPage(totalPages = 1, ids = listOf(1, 2, 3)), MediaType.APPLICATION_JSON))
+
+        val ids = client.fetchUpcomingMovieIds()
+
+        assertEquals(listOf(1L, 2L, 3L), ids)
+        server.verify()
+    }
+
+    @Test
+    fun `fetchUpcomingMovieIds walks every page total_pages reports`() {
+        server.expect(times(1), requestTo("$BASE_URL/movie/upcoming?region=US&page=1"))
+            .andRespond(withSuccess(discoveryPage(totalPages = 3, ids = listOf(1)), MediaType.APPLICATION_JSON))
+        server.expect(times(1), requestTo("$BASE_URL/movie/upcoming?region=US&page=2"))
+            .andRespond(withSuccess(discoveryPage(totalPages = 3, ids = listOf(2)), MediaType.APPLICATION_JSON))
+        server.expect(times(1), requestTo("$BASE_URL/movie/upcoming?region=US&page=3"))
+            .andRespond(withSuccess(discoveryPage(totalPages = 3, ids = listOf(3)), MediaType.APPLICATION_JSON))
+
+        val ids = client.fetchUpcomingMovieIds()
+
+        assertEquals(listOf(1L, 2L, 3L), ids)
+        server.verify()
+    }
+
+    @Test
+    fun `fetchUpcomingMovieIds never requests more than MAX_PAGES even if total_pages is huge`() {
+        repeat(50) { i ->
+            server.expect(times(1), requestTo("$BASE_URL/movie/upcoming?region=US&page=${i + 1}"))
+                .andRespond(withSuccess(discoveryPage(totalPages = 500, ids = listOf(i.toLong())), MediaType.APPLICATION_JSON))
+        }
+
+        val ids = client.fetchUpcomingMovieIds()
+
+        assertEquals(50, ids.size)
+        server.verify()
+    }
 }

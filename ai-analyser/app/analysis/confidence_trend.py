@@ -19,7 +19,7 @@ def record_snapshot(session, media_item_id, delay_probability: float, signal_cou
 def compute_trend(session, media_item_id, lookback: int = 5) -> str | None:
     """
     Looks at the last `lookback` snapshots for this media item (oldest to newest) and
-    classifies the movement of delay_probability as "rising", "falling", or "stable".
+    classifies the movement of delay_probability as "RISING", "FALLING", or "STABLE".
     Returns None when there isn't enough history yet to say anything meaningful.
     """
     snapshots = (
@@ -37,10 +37,10 @@ def compute_trend(session, media_item_id, lookback: int = 5) -> str | None:
 
     is_non_decreasing = all(b >= a for a, b in zip(values, values[1:]))
     if is_non_decreasing and values[-1] - values[0] >= MEANINGFUL_MOVE_POINTS:
-        return "rising"
+        return "RISING"
 
     is_non_increasing = all(b <= a for a, b in zip(values, values[1:]))
     if is_non_increasing and values[0] - values[-1] >= MEANINGFUL_MOVE_POINTS:
-        return "falling"
+        return "FALLING"
 
-    return "stable"
+    return "STABLE"

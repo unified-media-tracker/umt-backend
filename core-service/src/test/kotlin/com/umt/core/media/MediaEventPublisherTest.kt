@@ -1,7 +1,6 @@
 package com.umt.core.media
 
 import com.umt.core.rumor.RabbitMQConfig
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify

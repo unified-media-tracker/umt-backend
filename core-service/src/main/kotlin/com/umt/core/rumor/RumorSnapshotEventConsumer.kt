@@ -20,23 +20,12 @@ class RumorSnapshotEventConsumer(
             return
         }
 
-        val previous = rumorSnapshotRepository
-            .findByMediaItemIdOrderByComputedAtDesc(event.mediaItemId)
-            .firstOrNull()
-
-        val trend = when {
-            previous == null -> TrendDirection.STABLE
-            event.delayProbability > previous.delayProbability -> TrendDirection.UP
-            event.delayProbability < previous.delayProbability -> TrendDirection.DOWN
-            else -> TrendDirection.STABLE
-        }
-
         rumorSnapshotRepository.save(
             RumorSnapshot(
                 mediaItem = mediaItem,
                 delayProbability = event.delayProbability,
                 aggregateSentimentScore = event.aggregateSentimentScore,
-                confidenceTrend = trend,
+                confidenceTrend = event.confidenceTrend,
                 topSourceName = event.topSourceName,
                 computedAt = event.computedAt,
             )

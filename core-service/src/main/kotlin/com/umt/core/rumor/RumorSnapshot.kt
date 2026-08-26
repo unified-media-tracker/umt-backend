@@ -8,6 +8,8 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
+enum class TrendDirection { RISING, FALLING, STABLE }
+
 @Entity
 @Table(name = RumorSnapshot.TABLE_NAME)
 class RumorSnapshot(
@@ -26,10 +28,9 @@ class RumorSnapshot(
     @field:Column(name = AGGREGATE_SENTIMENT_SCORE_COLUMN)
     var aggregateSentimentScore: BigDecimal? = null,
 
-    @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @field:Column(name = CONFIDENCE_TREND_COLUMN, nullable = false)
-    var confidenceTrend: TrendDirection,
+    @field:Column(name = CONFIDENCE_TREND_COLUMN)
+    var confidenceTrend: TrendDirection? = null,
 
     @field:Column(name = TOP_SOURCE_NAME_COLUMN, length = 100)
     var topSourceName: String? = null,

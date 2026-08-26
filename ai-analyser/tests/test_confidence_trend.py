@@ -1,11 +1,11 @@
 """
 A single pipeline run is a snapshot, not a verdict - the trend only means anything once
-there's enough history, and it should only call "rising"/"falling" when the movement across
+there's enough history, and it should only call "RISING"/"FALLING" when the movement across
 runs is both monotonic and big enough to matter, not just noisy jitter around a flat value.
 """
 from unittest.mock import MagicMock
 
-from app.analysis.trend import compute_trend, record_snapshot
+from app.analysis.confidence_trend import compute_trend, record_snapshot
 
 
 def snapshot(delay_probability):
@@ -41,13 +41,13 @@ class TestRising:
         # newest-first from the query; oldest-to-newest is 10 -> 30 -> 45
         session = session_with_snapshots([snapshot(45), snapshot(30), snapshot(10)])
 
-        assert compute_trend(session, "some-id") == "rising"
+        assert compute_trend(session, "some-id") == "RISING"
 
     def test_a_small_climb_under_the_threshold_is_not_called_rising(self):
         # oldest-to-newest: 40 -> 42 -> 45, a 5-point move total
         session = session_with_snapshots([snapshot(45), snapshot(42), snapshot(40)])
 
-        assert compute_trend(session, "some-id") == "stable"
+        assert compute_trend(session, "some-id") == "STABLE"
 
 
 class TestFalling:
@@ -55,20 +55,20 @@ class TestFalling:
         # oldest-to-newest: 80 -> 60 -> 40
         session = session_with_snapshots([snapshot(40), snapshot(60), snapshot(80)])
 
-        assert compute_trend(session, "some-id") == "falling"
+        assert compute_trend(session, "some-id") == "FALLING"
 
 
 class TestStable:
     def test_flat_values_are_stable(self):
         session = session_with_snapshots([snapshot(50), snapshot(50), snapshot(50)])
 
-        assert compute_trend(session, "some-id") == "stable"
+        assert compute_trend(session, "some-id") == "STABLE"
 
     def test_non_monotonic_jitter_is_stable_not_rising_or_falling(self):
         # oldest-to-newest: 50 -> 20 -> 55 - neither purely up nor purely down
         session = session_with_snapshots([snapshot(55), snapshot(20), snapshot(50)])
 
-        assert compute_trend(session, "some-id") == "stable"
+        assert compute_trend(session, "some-id") == "STABLE"
 
 
 class TestRecordSnapshot:

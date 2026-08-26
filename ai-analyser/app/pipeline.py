@@ -2,7 +2,7 @@ from app.analysis.llm_evaluator import evaluate_post
 from app.analysis.delay_score import RumorSignalInput, compute_delay_probability
 from app.analysis.dedup import deduplicate_posts
 from app.analysis.source_reputation import get_source_reputation
-from app.analysis.trend import compute_trend, record_snapshot
+from app.analysis.confidence_trend import compute_trend, record_snapshot
 from app.db.models import RumorSignal
 from app.db.session import SessionLocal
 from app.ingestion.aggregator import fetch_all_posts
@@ -46,7 +46,7 @@ def run_pipeline_for_media_item(
         if publish:
             publish_rumor_computed(media_item_id=media_item_id, delay_probability=delay_probability,
                                    aggregate_sentiment_score=avg_sentiment, top_source_name=top_source,
-                                   trend=trend)
+                                   confidence_trend=trend)
         else:
             log.info(
                 "[MOCK] Results for %s: Delay=%s%%, Sentiment=%s, Top Source=%s, Trend=%s",

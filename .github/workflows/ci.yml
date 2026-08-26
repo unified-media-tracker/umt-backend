@@ -57,6 +57,13 @@ jobs:
       - name: Generate Python coverage for Sonar
         if: ${{ env.SONAR_TOKEN != '' }}
         working-directory: ai-analyser
+        # database_url/rabbitmq_password have no defaults in Settings (they're credentials -
+        # real values only ever come from .env/the environment, never from source). Every test
+        # here mocks the DB and RabbitMQ, so these placeholders just satisfy Settings() at
+        # import time - they're never used to actually connect to anything.
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          RABBITMQ_PASSWORD: test
         run: |
           pip install -r requirements-dev.txt
           pytest --cov=app --cov-report=xml
@@ -91,6 +98,13 @@ jobs:
     defaults:
       run:
         working-directory: ai-analyser
+    env:
+      # database_url/rabbitmq_password have no defaults in Settings (they're credentials -
+      # real values only ever come from .env/the environment, never from source). Every test
+      # here mocks the DB and RabbitMQ, so these placeholders just satisfy Settings() at
+      # import time - they're never used to actually connect to anything.
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+      RABBITMQ_PASSWORD: test
 
     steps:
       - uses: actions/checkout@v4

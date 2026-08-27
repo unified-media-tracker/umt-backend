@@ -112,4 +112,40 @@ class MediaEventPublisherTest {
             )
         }
     }
+
+    @Test
+    fun `publishReleased sends the media-released routing key with the item's id and release date`() {
+        val id = UUID.randomUUID()
+
+        publisher.publishReleased(mediaItem(id = id, releaseDate = LocalDate.of(2026, 8, 27)))
+
+        val payload = slot<MediaReleasedEvent>()
+        verify(exactly = 1) {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EVENTS_EXCHANGE,
+                RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY,
+                capture(payload),
+            )
+        }
+        assertEquals(id, payload.captured.mediaItemId)
+        assertEquals(LocalDate.of(2026, 8, 27), payload.captured.actualReleaseDate)
+    }
+
+    @Test
+    fun `publishReleased does nothing for an item with no release date`() {
+        publisher.publishReleased(mediaItem(releaseDate = null))
+
+        verify(exactly = 0) {
+            rabbitTemplate.convertAndSend(any<String>(), RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY, any<Any>())
+        }
+    }
+
+    @Test
+    fun `publishReleased does nothing for an unsaved item that has no id yet`() {
+        publisher.publishReleased(mediaItem(id = null))
+
+        verify(exactly = 0) {
+            rabbitTemplate.convertAndSend(any<String>(), RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY, any<Any>())
+        }
+    }
 }

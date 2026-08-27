@@ -30,6 +30,13 @@ class RabbitMQConfig {
         BindingBuilder.bind(mediaImportedQueue).to(eventsExchange).with(MEDIA_IMPORTED_ROUTING_KEY)
 
     @Bean
+    fun mediaReleasedQueue(): Queue = Queue(MEDIA_RELEASED_QUEUE, true)
+
+    @Bean
+    fun mediaReleasedBinding(mediaReleasedQueue: Queue, eventsExchange: TopicExchange): Binding =
+        BindingBuilder.bind(mediaReleasedQueue).to(eventsExchange).with(MEDIA_RELEASED_ROUTING_KEY)
+
+    @Bean
     fun jsonMessageConverter(): Jackson2JsonMessageConverter {
         val mapper = jacksonObjectMapper().apply {
             propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
@@ -45,5 +52,7 @@ class RabbitMQConfig {
         const val RUMOR_SNAPSHOT_COMPUTED_QUEUE = "core-service.rumor-snapshot-computed"
         const val MEDIA_IMPORTED_ROUTING_KEY = "media.imported"
         const val MEDIA_IMPORTED_QUEUE = "ai-analyser.media-imported"
+        const val MEDIA_RELEASED_ROUTING_KEY = "media.released"
+        const val MEDIA_RELEASED_QUEUE = "ai-analyser.media-released"
     }
 }

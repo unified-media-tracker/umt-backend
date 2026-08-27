@@ -31,6 +31,11 @@ Provide a sentiment score (-1.0 to 1.0) regarding the release date:
 - Neutral (0.0): General discussion.
 - Positive (0.1 to 1.0): Official date confirmation, early release, or game going gold.
 
+If the post explicitly names a specific release date (a day, or at minimum a month and year),
+extract it into 'extracted_release_date' as an ISO 8601 date (YYYY-MM-DD). Use the 1st of the
+month when only a month and year are given. Leave it null if no specific date is mentioned
+(e.g. only a vague window like "next year" or "Q3").
+
 Always think step-by-step in the 'reasoning' field before providing the final classification."""
 
 # ============================================================
@@ -71,7 +76,7 @@ def ask_ollama(system_prompt: str, user_prompt: str, response_schema: Type[T]) -
 
 def evaluate_post(media_title: str, post_text: str) -> PostEvaluation:
     """
-    Evaluates a specific news post snippet using the local LLM to determine
+    Evaluates a specific news post using the local LLM to determine
     if it contains news about a release date delay.
     """
     log.debug("ANALYSIS: [%s]", media_title)

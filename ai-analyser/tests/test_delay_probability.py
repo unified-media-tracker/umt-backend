@@ -3,9 +3,11 @@ compute_delay_probability is the one number this whole service exists to produce
 pure — no DB, no network, no LLM. That makes it the cheapest thing in the codebase to pin down
 and the most expensive thing to get silently wrong.
 """
+from datetime import date
+
 import pytest
 
-from app.analysis.delay_score import (
+from app.analysis.delay_probability import (
     SENTIMENT_WEIGHT,
     VOLUME_SATURATION_POINT,
     VOLUME_WEIGHT,
@@ -15,13 +17,14 @@ from app.schemas import InformationType, RumorSignalInput
 
 
 def signal(
-    *,
-    sentiment=-1.0,
-    reputation=1.0,
-    confidence=1.0,
-    mentions_delay=True,
-    info_type=InformationType.RUMOR,
-    source_name="Eurogamer",
+        *,
+        sentiment=-1.0,
+        reputation=1.0,
+        confidence=1.0,
+        mentions_delay=True,
+        info_type=InformationType.RUMOR,
+        source_name="Eurogamer",
+        extracted_release_date=None,
 ):
     return RumorSignalInput(
         source_name=source_name,
@@ -30,6 +33,7 @@ def signal(
         mentions_delay=mentions_delay,
         evaluation_confidence=confidence,
         info_type=info_type,
+        extracted_release_date=extracted_release_date,
     )
 
 
@@ -67,6 +71,56 @@ class TestOfficialDelayShortCircuit:
         assert compute_delay_probability([official_delay(sentiment=0.0)]) == 0.0
 
 
+class TestKnownReleaseDateComparison:
+    """
+    An LLM-extracted date is only news once compared against what we already knew - a post
+    stating the same date we already have on record isn't a signal at all - just noise.
+    """
+
+    KNOWN = date(2026, 11, 19)
+
+    def confirmed(self, extracted, confidence=0.9):
+        return signal(
+            info_type=InformationType.RELEASE_DATE_CHANGE,
+            extracted_release_date=extracted,
+            confidence=confidence,
+            mentions_delay=False,
+            sentiment=1.0,
+        )
+
+    def test_a_later_extracted_date_is_a_confirmed_delay(self):
+        result = compute_delay_probability([self.confirmed(date(2027, 3, 1))], known_release_date=self.KNOWN)
+        assert result == 100.0
+
+    def test_an_earlier_extracted_date_is_a_confirmed_move_up(self):
+        result = compute_delay_probability([self.confirmed(date(2026, 6, 1))], known_release_date=self.KNOWN)
+        assert result == 0.0
+
+    def test_a_matching_extracted_date_contributes_no_signal_beyond_normal_scoring(self):
+        baseline = compute_delay_probability([signal()], known_release_date=self.KNOWN)
+        with_matching_confirmation = compute_delay_probability([signal(), self.confirmed(self.KNOWN)],
+                                                               known_release_date=self.KNOWN, )
+        assert with_matching_confirmation == baseline
+
+    def test_low_confidence_does_not_trigger_the_comparison(self):
+        low_confidence = self.confirmed(date(2027, 3, 1), confidence=0.8)
+        result = compute_delay_probability([low_confidence], known_release_date=self.KNOWN)
+        assert result != 100.0
+
+    def test_a_rumor_with_an_extracted_date_does_not_trigger_the_comparison(self):
+        rumored = signal(
+            info_type=InformationType.RUMOR, extracted_release_date=date(2027, 3, 1),
+            confidence=0.95, mentions_delay=True, sentiment=-0.8,
+        )
+        result = compute_delay_probability([rumored], known_release_date=self.KNOWN)
+        assert result != 100.0
+        assert result != 0.0
+
+    def test_a_later_confirmation_wins_over_a_conflicting_earlier_one(self):
+        signals = [self.confirmed(date(2027, 3, 1)), self.confirmed(date(2026, 6, 1))]
+        assert compute_delay_probability(signals, known_release_date=self.KNOWN) == 100.0
+
+
 class TestNoRelevantSignals:
     def test_empty_input(self):
         assert compute_delay_probability([]) == 0.0
@@ -88,18 +142,17 @@ class TestNoRelevantSignals:
 
 class TestRumorScoring:
     def test_single_maximally_negative_rumor(self):
-        # negativity 1.0 * weight 0.6, volume 1/20 = 0.05 * weight 0.4  ->  0.62
+        # negativity 1.0 * weight 0.6, volume 1/20 = 0.05 * weight 0.4 -> 0.62
         assert compute_delay_probability([signal()]) == 62.0
 
     def test_low_reputation_and_low_confidence_dampen_the_score(self):
-        # 0.5 * 0.8 * 0.5 = 0.2 negativity, volume 0.05  ->  0.6*0.2 + 0.4*0.05 = 0.14
+        # 0.5 * 0.8 * 0.5 = 0.2 negativity, volume 0.05 -> 0.6 * 0.2 + 0.4 * 0.05 = 0.14
         result = compute_delay_probability(
             [signal(sentiment=-0.5, reputation=0.8, confidence=0.5)]
         )
         assert result == 14.0
 
     def test_positive_sentiment_contributes_no_negativity(self):
-        """max(0.0, -sentiment) floors a positive-sentiment rumor at zero, it never subtracts."""
         # only the volume term survives: 0.4 * (1/20) = 0.02
         assert compute_delay_probability([signal(sentiment=0.9)]) == 2.0
 

@@ -18,6 +18,7 @@ import java.time.LocalDate
 class ReleaseDateSyncService(
     private val mediaItemRepository: MediaRepository,
     private val releaseStatusHistoryRepository: ReleaseStatusHistoryRepository,
+    private val mediaEventPublisher: MediaEventPublisher,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -29,7 +30,9 @@ class ReleaseDateSyncService(
 
         existing.releaseDate = incomingDate
 
-        if (existing.releaseDateStatus != ReleaseStatus.RELEASED && previousDate != null && incomingDate.isAfter(previousDate)) {
+        if (existing.releaseDateStatus != ReleaseStatus.RELEASED && previousDate != null &&
+            incomingDate.isAfter(previousDate)
+        ) {
             existing.releaseDateStatus = ReleaseStatus.DELAYED
         }
 
@@ -47,5 +50,32 @@ class ReleaseDateSyncService(
         )
 
         return saved
+    }
+
+    // Daily sweep: marks RELEASED anything whose release date has passed. Separate from
+    // updateIfChanged because the "upcoming" sync loops stop seeing an item once upstream
+    // drops it from their own "upcoming" feed - right when it ships, right when this matters.
+    fun checkForNewlyReleasedItems(today: LocalDate = LocalDate.now()) {
+        val newlyReleased = mediaItemRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(
+            today, ReleaseStatus.RELEASED,
+        )
+
+        for (mediaItem in newlyReleased) {
+            mediaItem.releaseDateStatus = ReleaseStatus.RELEASED
+            val saved = mediaItemRepository.save(mediaItem)
+            val note = "Release date ${saved.releaseDate} reached, marking as released"
+            log.info("'{}' {}", saved.title, note)
+
+            releaseStatusHistoryRepository.save(
+                ReleaseStatusHistory(
+                    mediaItem = saved,
+                    status = ReleaseStatus.RELEASED,
+                    changedAt = Instant.now(),
+                    sourceNote = note,
+                )
+            )
+
+            mediaEventPublisher.publishReleased(saved)
+        }
     }
 }

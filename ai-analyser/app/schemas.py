@@ -1,3 +1,4 @@
+from datetime import date
 from enum import Enum
 from pydantic import BaseModel, Field, field_validator
 from dataclasses import dataclass
@@ -37,6 +38,11 @@ class PostEvaluation(BaseModel):
         le=1.0,
         description="Your confidence in this evaluation."
     )
+    extracted_release_date: str | None = Field(
+        default=None,
+        description="A specific release date explicitly mentioned in the post, as an ISO "
+                    "8601 date (YYYY-MM-DD). Null if no specific date is mentioned."
+    )
 
     @field_validator('confidence', mode='before')
     @classmethod
@@ -47,6 +53,19 @@ class PostEvaluation(BaseModel):
             else:
                 return float(v) / 10.0
         return v
+
+    @field_validator('extracted_release_date', mode='before')
+    @classmethod
+    def normalize_extracted_release_date(cls, v):
+        # Small local models occasionally answer in prose ("around Q3 2027") or leave the
+        # field malformed - a bad date should null the field, not fail the whole evaluation.
+        if not isinstance(v, str) or not v.strip():
+            return None
+        try:
+            date.fromisoformat(v.strip())
+        except ValueError:
+            return None
+        return v.strip()
 
 
 class SourceReputationEvaluation(BaseModel):
@@ -72,3 +91,4 @@ class RumorSignalInput:
     mentions_delay: bool
     evaluation_confidence: float
     info_type: InformationType
+    extracted_release_date: date | None = None

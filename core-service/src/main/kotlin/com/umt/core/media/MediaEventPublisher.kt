@@ -14,7 +14,26 @@ class MediaEventPublisher(private val rabbitTemplate: RabbitTemplate) {
         rabbitTemplate.convertAndSend(
             RabbitMQConfig.EVENTS_EXCHANGE,
             RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
-            MediaImportedEvent(mediaItemId = id, title = mediaItem.title),
+            MediaImportedEvent(
+                mediaItemId = id,
+                title = mediaItem.title,
+                mediaType = mediaItem.mediaType,
+                releaseDate = mediaItem.releaseDate,
+            ),
+        )
+    }
+
+    fun publishReleased(mediaItem: MediaItem) {
+        val id = mediaItem.id ?: return
+        val releaseDate = mediaItem.releaseDate ?: return
+
+        rabbitTemplate.convertAndSend(
+            RabbitMQConfig.EVENTS_EXCHANGE,
+            RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY,
+            MediaReleasedEvent(
+                mediaItemId = id,
+                actualReleaseDate = releaseDate
+            ),
         )
     }
 }

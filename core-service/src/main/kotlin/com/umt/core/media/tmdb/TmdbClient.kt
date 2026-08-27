@@ -31,9 +31,8 @@ class TmdbClient(
     fun fetchUpcomingMovieIds(region: String = "US"): List<Long> {
         val ids = mutableListOf<Long>()
         var page = 1
-        var totalPages = 1
 
-        do {
+        while (page <= MAX_PAGES) {
             val response = tmdbRestClient.get()
                 .uri { it.path("/movie/upcoming").queryParam("region", region).queryParam("page", page).build() }
                 .retrieve()
@@ -41,9 +40,9 @@ class TmdbClient(
                 ?: break
 
             ids += response.results.map { it.id }
-            totalPages = response.totalPages
+            if (page >= response.totalPages) break
             page++
-        } while (page <= totalPages && page <= MAX_PAGES)
+        }
 
         return ids
     }
@@ -51,9 +50,8 @@ class TmdbClient(
     fun fetchUpcomingTvShowIds(): List<Long> {
         val ids = mutableListOf<Long>()
         var page = 1
-        var totalPages = 1
 
-        do {
+        while (page <= MAX_PAGES) {
             val response = tmdbRestClient.get()
                 .uri {
                     it.path("/discover/tv")
@@ -67,9 +65,9 @@ class TmdbClient(
                 ?: break
 
             ids += response.results.map { it.id }
-            totalPages = response.totalPages
+            if (page >= response.totalPages) break
             page++
-        } while (page <= totalPages && page <= MAX_PAGES)
+        }
 
         return ids
     }

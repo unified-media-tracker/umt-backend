@@ -22,13 +22,15 @@ class ReleaseDateSyncServiceTest {
 
     private lateinit var mediaRepository: MediaRepository
     private lateinit var historyRepository: ReleaseStatusHistoryRepository
+    private lateinit var mediaEventPublisher: MediaEventPublisher
     private lateinit var service: ReleaseDateSyncService
 
     @BeforeEach
     fun setUp() {
         mediaRepository = mockk()
         historyRepository = mockk()
-        service = ReleaseDateSyncService(mediaRepository, historyRepository)
+        mediaEventPublisher = mockk(relaxed = true)
+        service = ReleaseDateSyncService(mediaRepository, historyRepository, mediaEventPublisher)
         // save() echoes its argument back, the way Spring Data does for an already-managed
         // entity. The type argument is required: CrudRepository.save is generic in S, which
         // erases to Object, so a relaxed mock hands back an Object and the caller blows up on
@@ -42,6 +44,7 @@ class ReleaseDateSyncServiceTest {
     private fun mediaItem(
         releaseDate: LocalDate?,
         status: ReleaseStatus = ReleaseStatus.ANNOUNCED,
+        externalSourceId: String = "42",
     ) = MediaItem(
         id = UUID.randomUUID(),
         mediaType = MediaType.GAME,
@@ -49,7 +52,7 @@ class ReleaseDateSyncServiceTest {
         releaseDate = releaseDate,
         releaseDateStatus = status,
         externalSource = ExternalSourceType.IGDB,
-        externalSourceId = "42",
+        externalSourceId = externalSourceId,
     )
 
     @Nested
@@ -137,6 +140,87 @@ class ReleaseDateSyncServiceTest {
 
             assertEquals(LocalDate.of(2026, 9, 1), result.releaseDate)
             assertEquals(ReleaseStatus.RELEASED, result.releaseDateStatus)
+        }
+    }
+
+    @Nested
+    @DisplayName("checkForNewlyReleasedItems")
+    inner class CheckForNewlyReleasedItems {
+
+        private val today = LocalDate.of(2026, 8, 27)
+
+        @Test
+        fun `a past-due item is marked RELEASED, logged to history, and published`() {
+            val item = mediaItem(LocalDate.of(2026, 8, 20), status = ReleaseStatus.ANNOUNCED)
+            every {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(today, ReleaseStatus.RELEASED)
+            } returns listOf(item)
+
+            service.checkForNewlyReleasedItems(today)
+
+            assertEquals(ReleaseStatus.RELEASED, item.releaseDateStatus)
+            verify(exactly = 1) { mediaRepository.save(item) }
+
+            val history = slot<ReleaseStatusHistory>()
+            verify(exactly = 1) { historyRepository.save(capture(history)) }
+            assertEquals(ReleaseStatus.RELEASED, history.captured.status)
+
+            verify(exactly = 1) { mediaEventPublisher.publishReleased(item) }
+        }
+
+        @Test
+        fun `an item releasing exactly today is included`() {
+            val item = mediaItem(today, status = ReleaseStatus.CONFIRMED)
+            every {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(today, ReleaseStatus.RELEASED)
+            } returns listOf(item)
+
+            service.checkForNewlyReleasedItems(today)
+
+            assertEquals(ReleaseStatus.RELEASED, item.releaseDateStatus)
+            verify(exactly = 1) { mediaEventPublisher.publishReleased(item) }
+        }
+
+        @Test
+        fun `nothing past-due means nothing is touched or published`() {
+            every {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(today, ReleaseStatus.RELEASED)
+            } returns emptyList()
+
+            service.checkForNewlyReleasedItems(today)
+
+            verify(exactly = 0) { mediaRepository.save(any<MediaItem>()) }
+            verify(exactly = 0) { historyRepository.save(any<ReleaseStatusHistory>()) }
+            verify(exactly = 0) { mediaEventPublisher.publishReleased(any()) }
+        }
+
+        @Test
+        fun `defaults to today when no date is given`() {
+            every {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(LocalDate.now(), ReleaseStatus.RELEASED)
+            } returns emptyList()
+
+            service.checkForNewlyReleasedItems()
+
+            verify(exactly = 1) {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(LocalDate.now(), ReleaseStatus.RELEASED)
+            }
+        }
+
+        @Test
+        fun `multiple past-due items are each processed independently`() {
+            val first = mediaItem(LocalDate.of(2026, 8, 1), status = ReleaseStatus.ANNOUNCED, externalSourceId = "1")
+            val second = mediaItem(LocalDate.of(2026, 8, 15), status = ReleaseStatus.CONFIRMED, externalSourceId = "2")
+            every {
+                mediaRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(today, ReleaseStatus.RELEASED)
+            } returns listOf(first, second)
+
+            service.checkForNewlyReleasedItems(today)
+
+            assertEquals(ReleaseStatus.RELEASED, first.releaseDateStatus)
+            assertEquals(ReleaseStatus.RELEASED, second.releaseDateStatus)
+            verify(exactly = 1) { mediaEventPublisher.publishReleased(first) }
+            verify(exactly = 1) { mediaEventPublisher.publishReleased(second) }
         }
     }
 }

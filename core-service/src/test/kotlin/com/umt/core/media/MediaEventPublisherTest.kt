@@ -1,7 +1,6 @@
 package com.umt.core.media
 
 import com.umt.core.rumor.RabbitMQConfig
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -33,11 +32,13 @@ class MediaEventPublisherTest {
         id: UUID? = UUID.randomUUID(),
         status: ReleaseStatus = ReleaseStatus.ANNOUNCED,
         title: String = "Silksong",
+        mediaType: MediaType = MediaType.GAME,
+        releaseDate: LocalDate? = LocalDate.of(2026, 12, 1),
     ) = MediaItem(
         id = id,
-        mediaType = MediaType.GAME,
+        mediaType = mediaType,
         title = title,
-        releaseDate = LocalDate.of(2026, 12, 1),
+        releaseDate = releaseDate,
         releaseDateStatus = status,
         popularityScore = BigDecimal.ONE,
         externalSource = ExternalSourceType.IGDB,
@@ -48,7 +49,9 @@ class MediaEventPublisherTest {
     fun `publishes an upcoming item to the events exchange with the media-imported routing key`() {
         val id = UUID.randomUUID()
 
-        publisher.publishIfUpcoming(mediaItem(id = id, title = "Silksong"))
+        publisher.publishIfUpcoming(
+            mediaItem(id = id, title = "Silksong", mediaType = MediaType.GAME, releaseDate = LocalDate.of(2026, 12, 1)),
+        )
 
         val payload = slot<MediaImportedEvent>()
         verify(exactly = 1) {
@@ -60,6 +63,19 @@ class MediaEventPublisherTest {
         }
         assertEquals(id, payload.captured.mediaItemId)
         assertEquals("Silksong", payload.captured.title)
+        assertEquals(MediaType.GAME, payload.captured.mediaType)
+        assertEquals(LocalDate.of(2026, 12, 1), payload.captured.releaseDate)
+    }
+
+    @Test
+    fun `publishes a null release date as-is for a TBA item`() {
+        publisher.publishIfUpcoming(mediaItem(releaseDate = null))
+
+        val payload = slot<MediaImportedEvent>()
+        verify(exactly = 1) {
+            rabbitTemplate.convertAndSend(any<String>(), any<String>(), capture(payload))
+        }
+        assertEquals(null, payload.captured.releaseDate)
     }
 
     @Test
@@ -94,6 +110,42 @@ class MediaEventPublisherTest {
                 RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
                 any<MediaImportedEvent>(),
             )
+        }
+    }
+
+    @Test
+    fun `publishReleased sends the media-released routing key with the item's id and release date`() {
+        val id = UUID.randomUUID()
+
+        publisher.publishReleased(mediaItem(id = id, releaseDate = LocalDate.of(2026, 8, 27)))
+
+        val payload = slot<MediaReleasedEvent>()
+        verify(exactly = 1) {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EVENTS_EXCHANGE,
+                RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY,
+                capture(payload),
+            )
+        }
+        assertEquals(id, payload.captured.mediaItemId)
+        assertEquals(LocalDate.of(2026, 8, 27), payload.captured.actualReleaseDate)
+    }
+
+    @Test
+    fun `publishReleased does nothing for an item with no release date`() {
+        publisher.publishReleased(mediaItem(releaseDate = null))
+
+        verify(exactly = 0) {
+            rabbitTemplate.convertAndSend(any<String>(), RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY, any<Any>())
+        }
+    }
+
+    @Test
+    fun `publishReleased does nothing for an unsaved item that has no id yet`() {
+        publisher.publishReleased(mediaItem(id = null))
+
+        verify(exactly = 0) {
+            rabbitTemplate.convertAndSend(any<String>(), RabbitMQConfig.MEDIA_RELEASED_ROUTING_KEY, any<Any>())
         }
     }
 }

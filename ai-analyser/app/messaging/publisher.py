@@ -14,6 +14,7 @@ def publish_rumor_computed(
         delay_probability: float,
         aggregate_sentiment_score: float | None,
         top_source_name: str | None,
+        confidence_trend: str | None = None,
 ):
     if pika is None:
         raise ImportError("pika is not installed or has a syntax error in this environment.")
@@ -32,6 +33,7 @@ def publish_rumor_computed(
         "delay_probability": delay_probability,
         "aggregate_sentiment_score": aggregate_sentiment_score,
         "top_source_name": top_source_name,
+        "confidence_trend": confidence_trend,
         "computed_at": datetime.now(timezone.utc).isoformat(),
     }
 

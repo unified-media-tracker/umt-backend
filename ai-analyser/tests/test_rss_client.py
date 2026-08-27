@@ -5,7 +5,7 @@ about one specific media item, and that one dead feed must not take the others d
 """
 from unittest.mock import patch
 
-from app.ingestion.rss_client import fetch_posts
+from app.ingestion.rss_client import _matching_entries, fetch_posts
 
 
 class FakeEntry(dict):
@@ -86,6 +86,53 @@ class TestFetchPosts:
         posts = fetch_posts("Silksong")
 
         assert all(isinstance(p["published_at"], float) for p in posts)
+
+
+class TestMatchingEntries:
+    """The per-feed matching logic in isolation - no feedparser mocking needed since it
+    takes a feed object directly."""
+
+    def test_only_entries_mentioning_the_needle_are_kept(self):
+        feed = FakeFeed([entry("Silksong news"), entry("Unrelated article")])
+
+        matches = _matching_entries(feed, needle="silksong", source_name="IGN", limit=5)
+
+        assert len(matches) == 1
+        assert matches[0]["source_name"] == "IGN"
+
+    def test_checks_the_summary_too(self):
+        feed = FakeFeed([entry("Big news today", summary="silksong delayed again")])
+
+        matches = _matching_entries(feed, needle="silksong", source_name="IGN", limit=5)
+
+        assert len(matches) == 1
+
+    def test_respects_the_limit(self):
+        feed = FakeFeed([entry("Silksong update") for _ in range(10)])
+
+        matches = _matching_entries(feed, needle="silksong", source_name="IGN", limit=2)
+
+        assert len(matches) == 2
+
+    def test_missing_published_parsed_does_not_crash(self):
+        feed = FakeFeed([entry("Silksong news", published_parsed=None)])
+
+        matches = _matching_entries(feed, needle="silksong", source_name="IGN", limit=5)
+
+        assert isinstance(matches[0]["published_at"], float)
+
+    def test_maps_to_the_house_post_shape(self):
+        feed = FakeFeed([entry("Silksong news", summary="more details", link="https://ign.com/a")])
+
+        matches = _matching_entries(feed, needle="silksong", source_name="IGN", limit=5)
+
+        assert matches[0] == {
+            "source_name": "IGN",
+            "source_url": "https://ign.com/a",
+            "source_reputation_score": 1.0,
+            "text": "Silksong news. more details",
+            "published_at": matches[0]["published_at"],
+        }
 
 
 class TestMediaTypeFiltering:

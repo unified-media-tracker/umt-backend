@@ -113,7 +113,8 @@ class TestKnownReleaseDateComparison:
             confidence=0.95, mentions_delay=True, sentiment=-0.8,
         )
         result = compute_delay_probability([rumored], known_release_date=self.KNOWN)
-        assert result != 100.0 and result != 0.0
+        assert result != 100.0
+        assert result != 0.0
 
     def test_a_later_confirmation_wins_over_a_conflicting_earlier_one(self):
         signals = [self.confirmed(date(2027, 3, 1)), self.confirmed(date(2026, 6, 1))]

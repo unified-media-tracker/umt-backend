@@ -27,7 +27,7 @@ CURATED_FEEDS = [
 
 def fetch_posts(media_title: str, media_type: str | None = None, limit_per_feed: int = 5):
     """
-    Fetches recent articles from a fixed list of curated gaming/movie trade press RSS feeds,
+    Fetches recent articles from a fixed list of curated trade press RSS feeds,
     keeping only entries that mention media_title in their title or summary.
     Returns: [{source_name, source_url, source_reputation_score, text, published_at}, ...]
     """
@@ -40,30 +40,33 @@ def fetch_posts(media_title: str, media_type: str | None = None, limit_per_feed:
 
         try:
             feed = feedparser.parse(feed_url)
-
-            matched = 0
-            for entry in feed.entries:
-                title = entry.get("title", "")
-                summary = entry.get("summary", "")
-                if needle not in title.lower() and needle not in summary.lower():
-                    continue
-
-                published_at = (
-                    time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else time.time()
-                )
-
-                results.append({
-                    "source_name": source_name,
-                    "source_url": entry.link,
-                    "source_reputation_score": 1.0,
-                    "text": f"{title}. {summary}",
-                    "published_at": published_at,
-                })
-
-                matched += 1
-                if matched >= limit_per_feed:
-                    break
+            results.extend(_matching_entries(feed, needle, source_name, limit_per_feed))
         except Exception:
             log.exception("Failed to fetch/parse curated feed %s (%s), skipping it", source_name, feed_url)
 
     return results
+
+
+def _matching_entries(feed, needle: str, source_name: str, limit: int) -> list[dict]:
+    """One feed's entries whose title/summary mention needle, mapped to the shared post shape every ingestion source returns."""
+    matches = []
+
+    for entry in feed.entries:
+        title = entry.get("title", "")
+        summary = entry.get("summary", "")
+        if needle not in title.lower() and needle not in summary.lower():
+            continue
+
+        published_at = time.mktime(entry.published_parsed) if hasattr(entry, "published_parsed") else time.time()
+        matches.append({
+            "source_name": source_name,
+            "source_url": entry.link,
+            "source_reputation_score": 1.0,
+            "text": f"{title}. {summary}",
+            "published_at": published_at,
+        })
+
+        if len(matches) >= limit:
+            break
+
+    return matches

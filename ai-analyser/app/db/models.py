@@ -36,8 +36,8 @@ class SourceReputation(Base):
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, nullable=False,default=lambda: datetime.now(timezone.utc))
 
-class RumorTrendSnapshot(Base):
-    __tablename__ = "rumor_trend_snapshot"
+class DelayProbabilityHistory(Base):
+    __tablename__ = "delay_probability_history"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     media_item_id = Column(UUID(as_uuid=True), nullable=False, index=True)

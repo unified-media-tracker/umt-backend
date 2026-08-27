@@ -40,7 +40,7 @@ def run_pipeline_for_media_item(
             max(relevant, key=lambda s: s.source_reputation_score).source_name if relevant else None
         )
 
-        record_snapshot(session, media_item_id, delay_probability, len(signals))
+        record_delay_probability(session, media_item_id, delay_probability, len(signals), parsed_known_date)
         trend = compute_trend(session, media_item_id)
 
         if publish:

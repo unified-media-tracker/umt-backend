@@ -43,4 +43,17 @@ class DelayProbabilityHistory(Base):
     media_item_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     delay_probability = Column(Numeric, nullable=False)
     signal_count = Column(Numeric, nullable=False)
+    # What we believed the release date was at this snapshot - the future training label
+    # compares MediaOutcome.actual_release_date against this, not against today's date.
+    known_release_date = Column(Date, nullable=True)
     computed_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
+class MediaOutcome(Base):
+    """Ground truth: when a media item actually released. One row per item ever -
+    media_item_id is the primary key, so a duplicate delivery just re-hits the same row."""
+    __tablename__ = "media_outcome"
+
+    media_item_id = Column(UUID(as_uuid=True), primary_key=True)
+    actual_release_date = Column(Date, nullable=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))

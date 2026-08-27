@@ -1,5 +1,5 @@
 from app.analysis.llm_evaluator import evaluate_post
-from app.analysis.delay_score import RumorSignalInput, compute_delay_probability
+from app.analysis.delay_probability import RumorSignalInput, compute_delay_probability
 from app.analysis.dedup import deduplicate_posts
 from app.analysis.source_reputation import get_source_reputation
 from app.analysis.confidence_trend import compute_trend, record_delay_probability

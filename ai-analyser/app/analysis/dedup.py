@@ -33,7 +33,7 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
 def deduplicate_posts(posts: list[dict], threshold: float = DEFAULT_SIMILARITY_THRESHOLD) -> list[dict]:
     """
     Collapses posts that are near-duplicate re-reports of the same underlying story
-    into one representative per cluster, so a repost doesn't inflate the delay score's
+    into one representative per cluster, so a repost doesn't inflate the delay probability's
     volume factor or cost an extra LLM call.
     """
     kept: list[tuple[dict, list[float]]] = []

@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from app.analysis.delay_score import (
+from app.analysis.delay_probability import (
     SENTIMENT_WEIGHT,
     VOLUME_SATURATION_POINT,
     VOLUME_WEIGHT,

@@ -35,28 +35,7 @@ class MediaServiceImpl(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importMovie(tmdbId)
-
     override fun importTvShowFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importTvShow(tmdbId)
-
-    // Calls tmdbCatalogImporter directly (a different bean) rather than this.importMovieFromTmdb -
-    // self-invocation would bypass Spring's proxy and silently drop @Transactional. See
-    // TmdbCatalogImporter's class doc for the full story.
-    override fun syncUpcomingMovies(): List<MediaItemResponse> {
-        val ids = tmdbClient.fetchUpcomingMovieIds()
-        val results = mutableListOf<MediaItemResponse>()
-
-        for (id in ids) {
-            try {
-                results.add(tmdbCatalogImporter.importMovie(id))
-            } catch (ex: Exception) {
-                log.error("Failed to import upcoming movie tmdbId={}, skipping it this run", id, ex)
-            }
-        }
-
-        log.info("Movie sync: {} discovered from TMDb", ids.size)
-        return results
-    }
 
     override fun syncUpcomingTvSeries(): List<MediaItemResponse> {
         val ids = tmdbClient.fetchUpcomingTvShowIds()

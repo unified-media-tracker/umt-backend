@@ -15,6 +15,7 @@ interface MediaMapper {
     // Doesn't map "contributors" - MediaItem has no field to map it from (see
     // MediaResponseAssembler for why, and where that field actually gets filled in).
     @Mapping(target = "contributors", ignore = true)
+    @Mapping(target = "movieDetails", ignore = true)
     fun toResponse(mediaItem: MediaItem): MediaItemResponse
 
     fun toGenreResponse(genre: Genre): GenreResponse

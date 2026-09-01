@@ -1,0 +1,53 @@
+getMovieDetails:
+  get:
+    tags: [Movie]
+    operationId: getMovieDetails
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
+
+importMovieFromTmdb:
+  post:
+    tags: [Movie]
+    operationId: importMovieFromTmdb
+    summary: "Import movie from TMDB"
+    description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
+    parameters:
+      - name: tmdbId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'
+
+syncUpcomingMovies:
+  post:
+    tags: [Movie]
+    operationId: syncUpcomingMovies
+    summary: "Sync upcoming movies from TMDB"
+    description: "Queries TMDB's /movie/upcoming and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/media-schemas.yaml#/components/schemas/MediaItemResponse'

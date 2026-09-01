@@ -4,11 +4,7 @@ import com.umt.api.generated.model.MediaItemResponse
 
 interface MediaService {
 
-    fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse
-
     fun importTvShowFromTmdb(tmdbId: Long): MediaItemResponse
-
-    fun syncUpcomingMovies(): List<MediaItemResponse>
 
     fun syncUpcomingTvSeries(): List<MediaItemResponse>
 

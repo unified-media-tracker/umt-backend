@@ -1,6 +1,14 @@
-package com.umt.core.media
+package com.umt.core.media.movie
 
-import jakarta.persistence.*
+import com.umt.core.media.MediaItem
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.MapsId
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 import java.util.UUID
 
 @Entity

@@ -196,8 +196,9 @@ getSimilarMedia:
     description: >-
       Public - no auth required. "More like this", not personalized - backed by the source
       catalog's own similarity signal (TMDb recommendations for movie/tv, IGDB similar_games
-      for game, Hardcover cached_similar_book_ids for book), filtered to whatever's already
-      in our own catalog. Music has no upstream source for this yet, so it's always empty.
+      for game, Hardcover cached_similar_book_ids for book, ListenBrainz similar artists for
+      music), filtered to whatever's already in our own catalog. Music is matched by artist:
+      the albums returned are the ones by artists similar to the album's own.
       Compare getRecommendations, which is user-personalized and type-agnostic. mediaCategory is
       optional, same meaning and same 404-not-fallback behavior as on getMediaById.
     parameters:

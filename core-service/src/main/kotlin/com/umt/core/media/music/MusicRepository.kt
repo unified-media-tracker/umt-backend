@@ -17,6 +17,9 @@ interface MusicRepository : JpaRepository<Music, UUID>, JpaSpecificationExecutor
     fun findByMusicbrainzId(musicbrainzId: String): Music?
 
     @EntityGraph(attributePaths = ["genres"])
+    fun findByIdIn(ids: Collection<UUID>): List<Music>
+
+    @EntityGraph(attributePaths = ["genres"])
     fun findByTitleIgnoreCase(title: String): List<Music>
 
     @EntityGraph(attributePaths = ["genres"])

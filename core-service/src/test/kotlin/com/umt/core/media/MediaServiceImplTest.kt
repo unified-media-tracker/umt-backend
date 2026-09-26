@@ -6,6 +6,7 @@ import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.media.book.BookRepository
+import com.umt.core.media.game.Game
 import com.umt.core.media.game.GameRepository
 import com.umt.core.media.movie.Movie
 import com.umt.core.media.movie.MovieRepository
@@ -14,13 +15,19 @@ import com.umt.core.media.music.MusicRepository
 import com.umt.core.media.tvshow.TvShowRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Expression
+import jakarta.persistence.criteria.Root
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.jpa.domain.Specification
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.Optional
@@ -79,25 +86,31 @@ class MediaServiceImplTest {
         }
 
         @Test
-        fun `no status queries findAll`() {
-            every { movieRepository.findAll() } returns emptyList()
+        fun `with no filters it runs one specification query on the movie repository`() {
+            every { movieRepository.findAll(any<Specification<Movie>>()) } returns emptyList()
             every { mediaResponseAssembler.assembleMovieList(emptyList()) } returns emptyList()
 
             service.listMedia(ApiMediaCategory.MOVIE, status = null, sort = null)
 
-            verify(exactly = 1) { movieRepository.findAll() }
-            verify(exactly = 0) { movieRepository.findByReleaseDateStatus(any()) }
+            verify(exactly = 1) { movieRepository.findAll(any<Specification<Movie>>()) }
+            verify(exactly = 0) { movieRepository.findAll() }
         }
 
         @Test
-        fun `a status filter queries findByReleaseDateStatus instead`() {
-            every { movieRepository.findByReleaseDateStatus(ReleaseStatus.CONFIRMED) } returns emptyList()
+        fun `status and releaseDateFrom both reach the repository as one specification`() {
+            val spec = slot<Specification<Movie>>()
+            every { movieRepository.findAll(capture(spec)) } returns emptyList()
             every { mediaResponseAssembler.assembleMovieList(emptyList()) } returns emptyList()
+            val from = LocalDate.of(2026, 9, 1)
 
-            service.listMedia(ApiMediaCategory.MOVIE, status = ApiReleaseStatus.CONFIRMED, sort = null)
+            service.listMedia(ApiMediaCategory.MOVIE, ApiReleaseStatus.CONFIRMED, sort = null, releaseDateFrom = from)
 
-            verify(exactly = 1) { movieRepository.findByReleaseDateStatus(ReleaseStatus.CONFIRMED) }
-            verify(exactly = 0) { movieRepository.findAll() }
+            // Run against a stand-in criteria builder: what matters here is that both filters made
+            // it into the predicate at all. MediaSpecificationsTest runs the real thing on Postgres.
+            val cb = mockk<CriteriaBuilder>(relaxed = true)
+            spec.captured.toPredicate(mockk<Root<Movie>>(relaxed = true), mockk<CriteriaQuery<*>>(relaxed = true), cb)
+            verify { cb.equal(any<Expression<*>>(), ReleaseStatus.CONFIRMED) }
+            verify { cb.greaterThanOrEqualTo(any<Expression<LocalDate>>(), from) }
         }
 
         // The when-over-MediaCategory dispatch is five near-identical branches - worth one check
@@ -106,13 +119,13 @@ class MediaServiceImplTest {
         @Test
         fun `a different media type dispatches to its own repository, not a copy-pasted sibling`() {
             every { mediaMapper.toDomainMediaCategory(ApiMediaCategory.GAME) } returns MediaCategory.GAME
-            every { gameRepository.findAll() } returns emptyList()
+            every { gameRepository.findAll(any<Specification<Game>>()) } returns emptyList()
             every { mediaResponseAssembler.assembleGameList(emptyList()) } returns emptyList()
 
             service.listMedia(ApiMediaCategory.GAME, status = null, sort = null)
 
-            verify(exactly = 1) { gameRepository.findAll() }
-            verify(exactly = 0) { movieRepository.findAll() }
+            verify(exactly = 1) { gameRepository.findAll(any<Specification<Game>>()) }
+            verify(exactly = 0) { movieRepository.findAll(any<Specification<Movie>>()) }
         }
 
         @Test
@@ -120,7 +133,7 @@ class MediaServiceImplTest {
             val soon = UUID.randomUUID()
             val later = UUID.randomUUID()
             val tba = UUID.randomUUID()
-            every { movieRepository.findAll() } returns listOf(movie(later), movie(tba), movie(soon))
+            every { movieRepository.findAll(any<Specification<Movie>>()) } returns listOf(movie(later), movie(tba), movie(soon))
             every { mediaResponseAssembler.assembleMovieList(any()) } returns listOf(
                 response(later, releaseDate = LocalDate.of(2027, 1, 1)),
                 response(tba, releaseDate = null),
@@ -137,7 +150,7 @@ class MediaServiceImplTest {
             val highRisk = UUID.randomUUID()
             val lowRisk = UUID.randomUUID()
             val unscored = UUID.randomUUID()
-            every { movieRepository.findAll() } returns listOf(movie(lowRisk), movie(unscored), movie(highRisk))
+            every { movieRepository.findAll(any<Specification<Movie>>()) } returns listOf(movie(lowRisk), movie(unscored), movie(highRisk))
             every { mediaResponseAssembler.assembleMovieList(any()) } returns listOf(
                 response(lowRisk, delayProbability = BigDecimal.valueOf(9)),
                 response(unscored, delayProbability = null),
@@ -153,7 +166,7 @@ class MediaServiceImplTest {
         fun `POPULARITY sort orders by popularity score descending`() {
             val popular = UUID.randomUUID()
             val niche = UUID.randomUUID()
-            every { movieRepository.findAll() } returns listOf(movie(niche), movie(popular))
+            every { movieRepository.findAll(any<Specification<Movie>>()) } returns listOf(movie(niche), movie(popular))
             every { mediaResponseAssembler.assembleMovieList(any()) } returns listOf(
                 response(niche, popularityScore = BigDecimal.valueOf(33)),
                 response(popular, popularityScore = BigDecimal.valueOf(93)),

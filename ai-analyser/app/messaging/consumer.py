@@ -12,6 +12,9 @@ log = logging.getLogger(__name__)
 
 EXCHANGE = "umt.events"
 MEDIA_ANALYSIS_REQUESTED_QUEUE = "ai-analyser.media-analysis-requested"
+# A request older than a day is stale (movies are re-requested on a schedule anyway), so an analyser
+# that's been off doesn't wake up to a backlog.
+MEDIA_ANALYSIS_REQUESTED_TTL_MS = 24 * 60 * 60 * 1000
 MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY = "media.analysis.requested"
 MEDIA_RELEASED_QUEUE = "ai-analyser.media-released"
 MEDIA_RELEASED_ROUTING_KEY = "media.released"
@@ -28,7 +31,10 @@ def start_consumer():
 
     channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
 
-    channel.queue_declare(queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, durable=True)
+    channel.queue_declare(
+        queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, durable=True,
+        arguments={"x-message-ttl": MEDIA_ANALYSIS_REQUESTED_TTL_MS},
+    )
     channel.queue_bind(exchange=EXCHANGE, queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, routing_key=MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY)
 
     channel.queue_declare(queue=MEDIA_RELEASED_QUEUE, durable=True)

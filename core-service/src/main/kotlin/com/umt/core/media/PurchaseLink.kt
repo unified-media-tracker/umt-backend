@@ -9,6 +9,9 @@ import java.util.UUID
 
 enum class AvailabilityStatus { AVAILABLE, PREORDER, UNAVAILABLE }
 
+/**
+ * Loosely referenced (mediaItemId + mediaCategory, no FK) - see Credit's class doc for why.
+ */
 @Entity
 @Table(name = PurchaseLink.TABLE_NAME)
 class PurchaseLink(
@@ -17,9 +20,13 @@ class PurchaseLink(
     @field:Column(name = ID_COLUMN)
     var id: UUID? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
-    var mediaItem: MediaItem,
+    @field:Column(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
+    var mediaItemId: UUID,
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @field:Column(name = MEDIA_CATEGORY_COLUMN, nullable = false)
+    var mediaCategory: MediaCategory,
 
     @field:Column(name = PLATFORM_NAME_COLUMN, nullable = false, length = 50)
     var platformName: String,
@@ -46,6 +53,7 @@ class PurchaseLink(
         const val TABLE_NAME = "purchase_link"
         const val ID_COLUMN = "id"
         const val MEDIA_ITEM_ID_COLUMN = "media_item_id"
+        const val MEDIA_CATEGORY_COLUMN = "media_category"
         const val PLATFORM_NAME_COLUMN = "platform_name"
         const val AFFILIATE_URL_COLUMN = "affiliate_url"
         const val PRICE_COLUMN = "price"

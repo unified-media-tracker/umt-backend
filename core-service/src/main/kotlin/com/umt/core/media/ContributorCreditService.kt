@@ -37,6 +37,8 @@ class ContributorCreditService(
                 )
             )
 
-        creditRepository.save(Credit(mediaItem = mediaItem, contributor = contributor, role = role))
+        creditRepository.save(
+            Credit(mediaItemId = mediaItem.id!!, mediaCategory = mediaItem.mediaCategory, contributor = contributor, role = role)
+        )
     }
 }

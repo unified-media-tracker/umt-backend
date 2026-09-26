@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface CreditRepository : JpaRepository<Credit, UUID> {
-    // MediaItem has no inverse "credits" collection - Credit only points at MediaItem, not
-    // the other way round - so this is a fresh, explicit query rather than a lazy relationship.
     @EntityGraph(attributePaths = ["contributor"])
     fun findByMediaItemId(mediaItemId: UUID): List<Credit>
+
+    @EntityGraph(attributePaths = ["contributor"])
+    fun findByMediaItemIdIn(mediaItemIds: Collection<UUID>): List<Credit>
 }

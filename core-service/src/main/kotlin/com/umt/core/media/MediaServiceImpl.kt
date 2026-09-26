@@ -1,221 +1,99 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.MediaItemResponse
-import com.umt.core.contribution.ContributorType
-import com.umt.core.contribution.RoleType
-import com.umt.core.media.hardcover.HardcoverClient
-import com.umt.core.media.hardcover.parsedReleaseDate as parsedReleaseDateFromHardcover
-import com.umt.core.media.hardcover.primaryAuthor
-import com.umt.core.media.hardcover.toMediaItem as toMediaItemFromHardcover
-import com.umt.core.media.igdb.IgdbClient
-import com.umt.core.media.igdb.parsedReleaseDate as parsedReleaseDateFromIgdb
-import com.umt.core.media.igdb.toMediaItem as toMediaItemFromIgdb
-import com.umt.core.media.metacritic.MetacriticAlbumsClient
-import com.umt.core.media.musicbrainz.MusicBrainzClient
-import com.umt.core.media.musicbrainz.toMediaItem as toMediaItemFromMusicBrainz
-import com.umt.core.media.tmdb.TmdbCatalogImporter
-import com.umt.core.media.tmdb.TmdbClient
-import org.slf4j.LoggerFactory
+import com.umt.api.generated.model.MediaSortOption
+import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
+import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
+import com.umt.core.media.book.BookRepository
+import com.umt.core.media.game.GameRepository
+import com.umt.core.media.music.MusicRepository
+import com.umt.core.media.movie.MovieRepository
+import com.umt.core.media.tvshow.TvShowRepository
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class MediaServiceImpl(
-    private val mediaItemRepository: MediaRepository,
-    private val tmdbClient: TmdbClient,
-    private val tmdbCatalogImporter: TmdbCatalogImporter,
-    private val metacriticAlbumsClient: MetacriticAlbumsClient,
-    private val musicBrainzClient: MusicBrainzClient,
-    private val igdbClient: IgdbClient,
-    private val hardcoverClient: HardcoverClient,
-    private val mediaEventPublisher: MediaEventPublisher,
-    private val releaseDateSyncService: ReleaseDateSyncService,
-    private val contributorCreditService: ContributorCreditService,
+    private val movieRepository: MovieRepository,
+    private val tvShowRepository: TvShowRepository,
+    private val gameRepository: GameRepository,
+    private val bookRepository: BookRepository,
+    private val musicRepository: MusicRepository,
     private val mediaResponseAssembler: MediaResponseAssembler,
+    private val mediaMapper: MediaMapper,
 ) : MediaService {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    override fun listMedia(mediaCategory: ApiMediaCategory, status: ApiReleaseStatus?, sort: MediaSortOption?): List<MediaItemResponse> {
+        val domainStatus = status?.let { mediaMapper.toDomainReleaseStatus(it) }
 
-    override fun importMovieFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importMovie(tmdbId)
-
-    override fun importTvShowFromTmdb(tmdbId: Long): MediaItemResponse = tmdbCatalogImporter.importTvShow(tmdbId)
-
-    // Calls tmdbCatalogImporter directly (a different bean) rather than this.importMovieFromTmdb -
-    // self-invocation would bypass Spring's proxy and silently drop @Transactional. See
-    // TmdbCatalogImporter's class doc for the full story.
-    override fun syncUpcomingMovies(): List<MediaItemResponse> {
-        val ids = tmdbClient.fetchUpcomingMovieIds()
-        val results = mutableListOf<MediaItemResponse>()
-
-        for (id in ids) {
-            try {
-                results.add(tmdbCatalogImporter.importMovie(id))
-            } catch (ex: Exception) {
-                log.error("Failed to import upcoming movie tmdbId={}, skipping it this run", id, ex)
-            }
+        val responses = when (mediaMapper.toDomainMediaCategory(mediaCategory)) {
+            MediaCategory.MOVIE -> mediaResponseAssembler.assembleMovieList(
+                domainStatus?.let { movieRepository.findByReleaseDateStatus(it) } ?: movieRepository.findAll()
+            )
+            MediaCategory.TV_SHOW -> mediaResponseAssembler.assembleTvShowList(
+                domainStatus?.let { tvShowRepository.findByReleaseDateStatus(it) } ?: tvShowRepository.findAll()
+            )
+            MediaCategory.GAME -> mediaResponseAssembler.assembleGameList(
+                domainStatus?.let { gameRepository.findByReleaseDateStatus(it) } ?: gameRepository.findAll()
+            )
+            MediaCategory.BOOK -> mediaResponseAssembler.assembleBookList(
+                domainStatus?.let { bookRepository.findByReleaseDateStatus(it) } ?: bookRepository.findAll()
+            )
+            MediaCategory.MUSIC -> mediaResponseAssembler.assembleMusicList(
+                domainStatus?.let { musicRepository.findByReleaseDateStatus(it) } ?: musicRepository.findAll()
+            )
         }
 
-        log.info("Movie sync: {} discovered from TMDb", ids.size)
-        return results
+        return responses.sortedForResponse(sort)
     }
 
-    override fun syncUpcomingTvSeries(): List<MediaItemResponse> {
-        val ids = tmdbClient.fetchUpcomingTvShowIds()
-        val results = mutableListOf<MediaItemResponse>()
+    // mediaCategory given: one table, one query. mediaCategory omitted: id alone doesn't say which of
+    // the five to look in, so this tries each in turn and takes the first hit - five tries the
+    // worst case, but only for a title with no match at all; movie/tv_show/game are the most
+    // likely hits, so they're checked first.
+    override fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory?): MediaItemResponse {
+        if (mediaCategory != null) return getMediaByKnownType(id, mediaMapper.toDomainMediaCategory(mediaCategory))
 
-        for (id in ids) {
-            try {
-                results.add(tmdbCatalogImporter.importTvShow(id))
-            } catch (ex: Exception) {
-                log.error("Failed to import upcoming tv show tmdbId={}, skipping it this run", id, ex)
-            }
+        movieRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
+        tvShowRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
+        gameRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
+        bookRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
+        musicRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
+        throw NoSuchElementException("Media item $id not found")
+    }
+
+    private fun getMediaByKnownType(id: UUID, mediaCategory: MediaCategory): MediaItemResponse {
+        val response = when (mediaCategory) {
+            MediaCategory.MOVIE -> movieRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
+            MediaCategory.TV_SHOW -> tvShowRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
+            MediaCategory.GAME -> gameRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
+            MediaCategory.BOOK -> bookRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
+            MediaCategory.MUSIC -> musicRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
         }
-
-        log.info("TV sync: {} discovered from TMDb", ids.size)
-        return results
+        return response ?: throw NoSuchElementException("Media item $id not found")
     }
 
-    // Deliberately not @Transactional: MusicBrainz enforces ~1 request/second, so this loop
-    // can run for a while on a big batch. Each mediaItemRepository.save() is already
-    // transactional on its own (Spring Data JPA), which is also the right granularity here -
-    // one bad candidate shouldn't roll back albums already imported earlier in the same run.
-    override fun syncUpcomingAlbums(): List<MediaItemResponse> {
-        val discovered = metacriticAlbumsClient.fetchUpcomingAlbums()
-        val results = mutableListOf<MediaItemResponse>()
-
-        for (candidate in discovered) {
-            try {
-                // Matched by title only (not title+date): a date change on an already-known
-                // album still hits this branch, so it can be compared/updated without spending
-                // a throttled MusicBrainz call just to re-discover the same MBID.
-                val existingAlbum = mediaItemRepository.findByMediaTypeAndTitleIgnoreCase(
-                    MediaType.MUSIC, candidate.title,
-                ).firstOrNull()
-                if (existingAlbum != null) {
-                    val updated = releaseDateSyncService.updateIfChanged(existingAlbum, candidate.releaseDate, "Metacritic")
-                    results.add(mediaResponseAssembler.assemble(updated))
-                    continue
-                }
-
-                val match = musicBrainzClient.findReleaseGroup(candidate.artist, candidate.title)
-                if (match == null) {
-                    log.info("No confident MusicBrainz match for {} - {}, skipping", candidate.artist, candidate.title)
-                    continue
-                }
-
-                // Belt-and-suspenders: the title matching above should already have caught this,
-                // but titles can be normalised differently between Metacritic and MusicBrainz.
-                val existingByMbid = mediaItemRepository.findByExternalSourceAndExternalSourceId(
-                    ExternalSourceType.MUSICBRAINZ, match.id,
-                )
-                if (existingByMbid != null) continue
-
-                val mediaItem = match.toMediaItemFromMusicBrainz(candidate.releaseDate)
-                val saved = mediaItemRepository.save(mediaItem)
-
-                val artistRef = match.artistCredit.firstOrNull()?.artist
-                if (artistRef == null) {
-                    log.warn("MusicBrainz release-group {} had no linked artist id, skipping credit", match.id)
-                } else {
-                    contributorCreditService.credit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
-                }
-                mediaEventPublisher.publishIfUpcoming(saved)
-                results.add(mediaResponseAssembler.assemble(saved))
-            } catch (ex: Exception) {
-                log.error("Failed to process candidate {} - {}, skipping it this run", candidate.artist, candidate.title, ex)
-            }
-        }
-
-        log.info("Album sync: {} discovered from Metacritic", discovered.size)
-        return results
-    }
-
-    // IGDB is both the discovery and the identity source in one call (unlike the Metacritic+
-    // MusicBrainz split for albums), so this is simpler: no per-candidate throttling needed,
-    // IGDB's own limit is 4req/s/8 concurrent, and we only make one query per run here.
-    override fun syncUpcomingGames(): List<MediaItemResponse> {
-        val games = igdbClient.fetchUpcomingGames()
-        val results = mutableListOf<MediaItemResponse>()
-
-        for (game in games) {
-            try {
-                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
-                    ExternalSourceType.IGDB, game.id.toString(),
-                )
-                if (existing != null) {
-                    val updated = releaseDateSyncService.updateIfChanged(existing, game.parsedReleaseDateFromIgdb, "IGDB")
-                    results.add(mediaResponseAssembler.assemble(updated))
-                    continue
-                }
-
-                val mediaItem = game.toMediaItemFromIgdb()
-                val saved = mediaItemRepository.save(mediaItem)
-
-                game.involvedCompanies.forEach { involved ->
-                    val company = involved.company ?: return@forEach
-                    if (involved.developer) {
-                        contributorCreditService.credit(
-                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
-                            RoleType.DEVELOPER, ContributorType.ORGANIZATION,
-                        )
-                    }
-                    if (involved.publisher) {
-                        contributorCreditService.credit(
-                            saved, ExternalSourceType.IGDB, company.id.toString(), company.name,
-                            RoleType.PUBLISHER, ContributorType.ORGANIZATION,
-                        )
-                    }
-                }
-
-                mediaEventPublisher.publishIfUpcoming(saved)
-                results.add(mediaResponseAssembler.assemble(saved))
-            } catch (ex: Exception) {
-                log.error("Failed to process IGDB game {} - {}, skipping it this run", game.id, game.name, ex)
-            }
-        }
-
-        log.info("Game sync: {} fetched from IGDB", games.size)
-        return results
-    }
-
-    override fun syncUpcomingBooks(): List<MediaItemResponse> {
-        val books = hardcoverClient.fetchUpcomingBooks()
-        val results = mutableListOf<MediaItemResponse>()
-
-        for (book in books) {
-            try {
-                val existing = mediaItemRepository.findByExternalSourceAndExternalSourceId(
-                    ExternalSourceType.HARDCOVER, book.id.toString(),
-                )
-                if (existing != null) {
-                    val updated = releaseDateSyncService.updateIfChanged(existing, book.parsedReleaseDateFromHardcover, "Hardcover")
-                    results.add(mediaResponseAssembler.assemble(updated))
-                    continue
-                }
-
-                val mediaItem = book.toMediaItemFromHardcover()
-                val saved = mediaItemRepository.save(mediaItem)
-
-                val author = book.primaryAuthor
-                if (author == null) {
-                    log.warn("Hardcover book {} had no linked author, skipping credit", book.id)
-                } else {
-                    contributorCreditService.credit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
-                }
-                mediaEventPublisher.publishIfUpcoming(saved)
-                results.add(mediaResponseAssembler.assemble(saved))
-            } catch (ex: Exception) {
-                log.error("Failed to process Hardcover book {} - {}, skipping it this run", book.id, book.title, ex)
-            }
-        }
-
-        log.info("Book sync: {} fetched from Hardcover", books.size)
-        return results
-    }
-
+    // Assembles every item across all five tables before picking RANDOM_MEDIA_ITEMS_LIMIT of
+    // them - wasteful in principle, fine in practice at this catalogue's size, and it avoids
+    // needing runtime type-dispatch anywhere else in the codebase for the one heterogeneous list.
     override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
-        return mediaResponseAssembler.assembleList(
-            mediaItems = mediaItemRepository.fndRandomMediaItemsLimit(RANDOM_MEDIA_ITEMS_LIMIT)
-        )
+        val pool = mediaResponseAssembler.assembleMovieList(movieRepository.findAll()) +
+            mediaResponseAssembler.assembleTvShowList(tvShowRepository.findAll()) +
+            mediaResponseAssembler.assembleGameList(gameRepository.findAll()) +
+            mediaResponseAssembler.assembleBookList(bookRepository.findAll()) +
+            mediaResponseAssembler.assembleMusicList(musicRepository.findAll())
+
+        return pool.shuffled().take(RANDOM_MEDIA_ITEMS_LIMIT)
+    }
+
+    // TBA/unscored items sort to the end regardless of direction, rather than being read as
+    // "releases today" or "0% risk" - the same sentinel values the frontend uses for the same reason.
+    private fun List<MediaItemResponse>.sortedForResponse(sort: MediaSortOption?): List<MediaItemResponse> = when (sort) {
+        MediaSortOption.DELAY_RISK -> sortedByDescending { it.latestDelayProbability ?: BigDecimal.valueOf(-1) }
+        MediaSortOption.POPULARITY -> sortedByDescending { it.popularityScore }
+        MediaSortOption.RELEASE_DATE, null -> sortedBy { it.releaseDate ?: LocalDate.MAX }
     }
 
     companion object {

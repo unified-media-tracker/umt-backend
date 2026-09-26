@@ -6,6 +6,9 @@ import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.util.UUID
 
+/**
+ *  Loosely referenced (mediaItemId + mediaCategory, no FK) - see Credit's class doc for why.
+ */
 @Entity
 @Table(name = ReleaseStatusHistory.TABLE_NAME)
 class ReleaseStatusHistory(
@@ -14,9 +17,13 @@ class ReleaseStatusHistory(
     @field:Column(name = ID_COLUMN)
     var id: UUID? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
-    var mediaItem: MediaItem,
+    @field:Column(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
+    var mediaItemId: UUID,
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @field:Column(name = MEDIA_CATEGORY_COLUMN, nullable = false)
+    var mediaCategory: MediaCategory,
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
@@ -33,6 +40,7 @@ class ReleaseStatusHistory(
         const val TABLE_NAME = "release_status_history"
         const val ID_COLUMN = "id"
         const val MEDIA_ITEM_ID_COLUMN = "media_item_id"
+        const val MEDIA_CATEGORY_COLUMN = "media_category"
         const val STATUS_COLUMN = "status"
         const val CHANGED_AT_COLUMN = "changed_at"
         const val SOURCE_NOTE_COLUMN = "source_note"

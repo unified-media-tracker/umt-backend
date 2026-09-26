@@ -1,8 +1,10 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType
+import com.umt.api.generated.model.MediaItemRequest
 import com.umt.api.generated.model.MediaItemResponse
-import com.umt.api.generated.model.MediaType
+import com.umt.api.generated.model.MediaSortOption
+import com.umt.api.generated.model.MediaCategory
 import com.umt.api.generated.model.ReleaseStatus
 import io.mockk.every
 import io.mockk.mockk
@@ -22,17 +24,19 @@ import java.util.UUID
 class MediaControllerTest {
 
     private lateinit var mediaService: MediaService
+    private lateinit var similarMediaService: SimilarMediaService
     private lateinit var controller: MediaController
 
     @BeforeEach
     fun setUp() {
         mediaService = mockk()
-        controller = MediaController(mediaService)
+        similarMediaService = mockk()
+        controller = MediaController(mediaService, similarMediaService)
     }
 
     private fun response(title: String) = MediaItemResponse(
         id = UUID.randomUUID(),
-        mediaType = MediaType.BOOK,
+        mediaCategory = MediaCategory.BOOK,
         title = title,
         releaseDateStatus = ReleaseStatus.ANNOUNCED,
         popularityScore = BigDecimal.ZERO,
@@ -42,26 +46,85 @@ class MediaControllerTest {
     )
 
     @Test
-    fun `syncUpcomingBooks delegates to the service and returns its result as-is`() {
-        val results = listOf(response("Dune"))
-        every { mediaService.syncUpcomingBooks() } returns results
+    fun `listMedia delegates to the service with all three query params`() {
+        val results = listOf(response("Meridian Line"))
+        every { mediaService.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK) } returns results
 
-        val result = controller.syncUpcomingBooks()
+        val result = controller.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK)
 
         assertEquals(HttpStatus.OK, result.statusCode)
         assertEquals(results, result.body)
-        verify(exactly = 1) { mediaService.syncUpcomingBooks() }
+        verify(exactly = 1) { mediaService.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK) }
     }
 
     @Test
-    fun `importMovieFromTmdb delegates to the service with the given id`() {
-        val expected = response("Inception")
-        every { mediaService.importMovieFromTmdb(27205L) } returns expected
+    fun `listMedia works with status and sort both omitted`() {
+        every { mediaService.listMedia(MediaCategory.MOVIE, null, null) } returns emptyList()
 
-        val result = controller.importMovieFromTmdb(27205L)
+        val result = controller.listMedia(MediaCategory.MOVIE, null, null)
 
-        assertEquals(expected, result.body)
-        verify(exactly = 1) { mediaService.importMovieFromTmdb(27205L) }
+        assertEquals(emptyList<MediaItemResponse>(), result.body)
     }
 
+    @Test
+    fun `getMediaById delegates to the service with the given id and no mediaCategory`() {
+        val id = UUID.randomUUID()
+        val expected = response("Meridian Line")
+        every { mediaService.getMediaById(id, null) } returns expected
+
+        val result = controller.getMediaById(id, null)
+
+        assertEquals(HttpStatus.OK, result.statusCode)
+        assertEquals(expected, result.body)
+        verify(exactly = 1) { mediaService.getMediaById(id, null) }
+    }
+
+    @Test
+    fun `getMediaById forwards mediaCategory through to the service, unchanged`() {
+        val id = UUID.randomUUID()
+        val expected = response("Project Hail Mary")
+        every { mediaService.getMediaById(id, MediaCategory.BOOK) } returns expected
+
+        val result = controller.getMediaById(id, MediaCategory.BOOK)
+
+        assertEquals(expected, result.body)
+        verify(exactly = 1) { mediaService.getMediaById(id, MediaCategory.BOOK) }
+    }
+
+    @Test
+    fun `getSimilarMedia delegates to SimilarMediaService with the given id and no mediaCategory`() {
+        val id = UUID.randomUUID()
+        val results = listOf(response("Blade Runner 2049"))
+        every { similarMediaService.getSimilarMedia(id, null) } returns results
+
+        val result = controller.getSimilarMedia(id, null)
+
+        assertEquals(HttpStatus.OK, result.statusCode)
+        assertEquals(results, result.body)
+        verify(exactly = 1) { similarMediaService.getSimilarMedia(id, null) }
+    }
+
+    @Test
+    fun `getSimilarMedia forwards mediaCategory through to SimilarMediaService, unchanged`() {
+        val id = UUID.randomUUID()
+        val results = listOf(response("Portal 3"))
+        every { similarMediaService.getSimilarMedia(id, MediaCategory.GAME) } returns results
+
+        val result = controller.getSimilarMedia(id, MediaCategory.GAME)
+
+        assertEquals(results, result.body)
+        verify(exactly = 1) { similarMediaService.getSimilarMedia(id, MediaCategory.GAME) }
+    }
+
+    @Test
+    fun `getRecommendations delegates to the service with the request's userId`() {
+        val results = listOf(response("Meridian Line"))
+        every { mediaService.getUserRecommendations(userId = 42L) } returns results
+
+        val result = controller.getRecommendations(MediaItemRequest(userId = 42L))
+
+        assertEquals(HttpStatus.OK, result.statusCode)
+        assertEquals(results, result.body)
+        verify(exactly = 1) { mediaService.getUserRecommendations(userId = 42L) }
+    }
 }

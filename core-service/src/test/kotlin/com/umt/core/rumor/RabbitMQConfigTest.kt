@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.umt.core.media.MediaAnalysisRequestedEvent
 import com.umt.core.media.MediaCategory
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.amqp.core.MessageProperties
 import java.time.LocalDate
@@ -21,6 +22,14 @@ class RabbitMQConfigTest {
         assertEquals("umt.events", RabbitMQConfig.EVENTS_EXCHANGE)
         assertEquals("media.analysis.requested", RabbitMQConfig.MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY)
         assertEquals("ai-analyser.media-analysis-requested", RabbitMQConfig.MEDIA_ANALYSIS_REQUESTED_QUEUE)
+    }
+
+    @Test
+    fun `stale analysis requests expire after a day, exactly as the analyser declares the queue`() {
+        val queue = RabbitMQConfig().mediaAnalysisRequestedQueue()
+
+        assertTrue(queue.isDurable)
+        assertEquals(86_400_000, queue.arguments["x-message-ttl"])
     }
 
     @Test

@@ -3,7 +3,7 @@ package com.umt.core.media
 import com.umt.api.generated.MediaApi
 import com.umt.api.generated.model.MediaCategory
 import com.umt.api.generated.model.MediaItemRequest
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MediaResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.ReleaseStatus
 import org.springframework.http.ResponseEntity
@@ -24,16 +24,16 @@ class MediaController(
         status: ReleaseStatus?,
         sort: MediaSortOption?,
         releaseDateFrom: LocalDate?,
-    ): ResponseEntity<List<MediaItemResponse>> =
+    ): ResponseEntity<List<MediaResponse>> =
         ResponseEntity.ok(mediaService.listMedia(mediaCategory, status, sort, releaseDateFrom))
 
-    override fun getMediaById(id: UUID, mediaCategory: MediaCategory?): ResponseEntity<MediaItemResponse> =
+    override fun getMediaById(id: UUID, mediaCategory: MediaCategory?): ResponseEntity<MediaResponse> =
         ResponseEntity.ok(mediaService.getMediaById(id, mediaCategory))
 
-    override fun getSimilarMedia(id: UUID, mediaCategory: MediaCategory?): ResponseEntity<List<MediaItemResponse>> =
+    override fun getSimilarMedia(id: UUID, mediaCategory: MediaCategory?): ResponseEntity<List<MediaResponse>> =
         ResponseEntity.ok(similarMediaService.getSimilarMedia(id, mediaCategory))
 
     @PreAuthorize("hasRole('USER')")
-    override fun getRecommendations(@RequestBody mediaItemRequest: MediaItemRequest): ResponseEntity<List<MediaItemResponse>> =
+    override fun getRecommendations(@RequestBody mediaItemRequest: MediaItemRequest): ResponseEntity<List<MediaResponse>> =
         ResponseEntity.ok(mediaService.getUserRecommendations(userId = mediaItemRequest.userId))
 }

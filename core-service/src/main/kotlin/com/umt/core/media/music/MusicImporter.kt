@@ -1,6 +1,6 @@
 package com.umt.core.media.music
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.core.contribution.RoleType
 import com.umt.core.media.ContributorCreditService
 import com.umt.core.media.ExternalSourceType
@@ -32,7 +32,7 @@ class MusicImporter(
     // Returns null when the candidate is a known no-match or a belt-and-suspenders duplicate -
     // both are "nothing new happened", not an error, so the caller just skips them.
     @Transactional
-    fun importCandidate(candidate: UpcomingMusicCandidate): MediaItemResponse? {
+    fun importCandidate(candidate: UpcomingMusicCandidate): MusicResponse? {
         // Matched by title only (not title+date): a date change on an already-known release
         // still hits this branch, so it can be compared/updated without spending a throttled
         // MusicBrainz call just to re-discover the same MBID.

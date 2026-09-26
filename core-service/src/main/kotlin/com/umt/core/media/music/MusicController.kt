@@ -1,7 +1,7 @@
 package com.umt.core.media.music
 
 import com.umt.api.generated.MusicApi
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MusicResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
@@ -12,6 +12,6 @@ class MusicController(
 ) : MusicApi {
 
     @PreAuthorize("hasRole('ADMIN')")
-    override fun syncUpcomingMusic(): ResponseEntity<List<MediaItemResponse>> =
+    override fun syncUpcomingMusic(): ResponseEntity<List<MusicResponse>> =
         ResponseEntity.ok(musicCatalogSyncScheduler.syncUpcomingMusic())
 }

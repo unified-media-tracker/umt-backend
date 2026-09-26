@@ -1,7 +1,7 @@
 package com.umt.core.media.book
 
 import com.umt.api.generated.BookApi
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.BookResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
@@ -12,6 +12,6 @@ class BookController(
 ) : BookApi {
 
     @PreAuthorize("hasRole('ADMIN')")
-    override fun syncUpcomingBooks(): ResponseEntity<List<MediaItemResponse>> =
+    override fun syncUpcomingBooks(): ResponseEntity<List<BookResponse>> =
         ResponseEntity.ok(bookCatalogSyncScheduler.syncUpcomingBooks())
 }

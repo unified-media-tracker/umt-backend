@@ -1,6 +1,6 @@
 package com.umt.core.media.music
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.core.media.music.metacritic.MetacriticMusicClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -23,10 +23,10 @@ class MusicCatalogSyncScheduler(
     // on its own - one bad candidate shouldn't roll back releases already imported earlier in
     // the same run.
     @Scheduled(cron = "0 0 4 * * *")
-    fun syncUpcomingMusic(): List<MediaItemResponse> {
+    fun syncUpcomingMusic(): List<MusicResponse> {
         log.info("Starting scheduled upcoming-music sync")
         val discovered = metacriticMusicClient.fetchUpcomingMusic()
-        val results = mutableListOf<MediaItemResponse>()
+        val results = mutableListOf<MusicResponse>()
 
         for (candidate in discovered) {
             try {

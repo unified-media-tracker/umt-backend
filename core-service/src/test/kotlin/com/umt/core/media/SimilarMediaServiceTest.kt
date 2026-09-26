@@ -1,7 +1,10 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.BookResponse
+import com.umt.api.generated.model.GameResponse
+import com.umt.api.generated.model.MovieResponse
+import com.umt.api.generated.model.TvShowResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.media.book.Book
@@ -66,21 +69,37 @@ class SimilarMediaServiceTest {
             movieRepository, tvShowRepository, gameRepository, bookRepository, musicRepository,
             tmdbClient, igdbClient, hardcoverClient, mediaResponseAssembler, mediaMapper,
         )
-        every { mediaResponseAssembler.assembleMovieList(any()) } answers { fixedResponses(firstArg()) }
-        every { mediaResponseAssembler.assembleTvShowList(any()) } answers { fixedResponses(firstArg()) }
-        every { mediaResponseAssembler.assembleGameList(any()) } answers { fixedResponses(firstArg()) }
-        every { mediaResponseAssembler.assembleBookList(any()) } answers { fixedResponses(firstArg()) }
+        every { mediaResponseAssembler.assembleMovieList(any()) } answers { firstArg<List<Movie>>().map(::movieResponse) }
+        every { mediaResponseAssembler.assembleTvShowList(any()) } answers { firstArg<List<TvShow>>().map(::tvShowResponse) }
+        every { mediaResponseAssembler.assembleGameList(any()) } answers { firstArg<List<Game>>().map(::gameResponse) }
+        every { mediaResponseAssembler.assembleBookList(any()) } answers { firstArg<List<Book>>().map(::bookResponse) }
     }
 
-    // Stands in for the real assembler: one response per item, titled after it, in the same
+    // Stand in for the real assembler: one response per item, titled after it, in the same
     // order it was given - lets tests assert on order/count without caring about enrichment.
-    private fun fixedResponses(items: List<MediaItem>): List<MediaItemResponse> = items.map {
-        MediaItemResponse(
-            id = it.id!!, mediaCategory = ApiMediaCategory.MOVIE, title = it.title,
-            releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
-            ratingCount = 0, externalSource = ApiExternalSourceType.TMDB, externalSourceId = "x",
-        )
-    }
+    private fun movieResponse(item: MediaItem) = MovieResponse(
+        id = item.id!!, mediaCategory = ApiMediaCategory.MOVIE, title = item.title,
+        releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
+        ratingCount = 0, externalSource = ApiExternalSourceType.TMDB, externalSourceId = "x",
+    )
+
+    private fun tvShowResponse(item: MediaItem) = TvShowResponse(
+        id = item.id!!, mediaCategory = ApiMediaCategory.TV_SHOW, title = item.title,
+        releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
+        ratingCount = 0, externalSource = ApiExternalSourceType.TMDB, externalSourceId = "x",
+    )
+
+    private fun gameResponse(item: MediaItem) = GameResponse(
+        id = item.id!!, mediaCategory = ApiMediaCategory.GAME, title = item.title,
+        releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
+        ratingCount = 0, externalSource = ApiExternalSourceType.IGDB, externalSourceId = "x",
+    )
+
+    private fun bookResponse(item: MediaItem) = BookResponse(
+        id = item.id!!, mediaCategory = ApiMediaCategory.BOOK, title = item.title,
+        releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
+        ratingCount = 0, externalSource = ApiExternalSourceType.HARDCOVER, externalSourceId = "x",
+    )
 
     @Nested
     inner class UnknownAndMusic {

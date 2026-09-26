@@ -1,7 +1,7 @@
 package com.umt.core.media.movie
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MovieResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.contribution.RoleType
@@ -39,7 +39,7 @@ class MovieImporterTest {
     private lateinit var contributorCreditService: ContributorCreditService
     private lateinit var importer: MovieImporter
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = MovieResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.MOVIE,
         title = "assembled",

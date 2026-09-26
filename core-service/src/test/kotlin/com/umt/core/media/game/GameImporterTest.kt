@@ -1,7 +1,7 @@
 package com.umt.core.media.game
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.GameResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.contribution.ContributorType
@@ -34,7 +34,7 @@ class GameImporterTest {
     private lateinit var contributorCreditService: ContributorCreditService
     private lateinit var importer: GameImporter
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = GameResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.GAME,
         title = "assembled",

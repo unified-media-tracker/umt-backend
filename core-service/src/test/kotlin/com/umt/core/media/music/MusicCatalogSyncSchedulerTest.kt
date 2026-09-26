@@ -1,7 +1,7 @@
 package com.umt.core.media.music
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.media.music.metacritic.MetacriticMusicClient
@@ -21,7 +21,7 @@ class MusicCatalogSyncSchedulerTest {
     private lateinit var musicImporter: MusicImporter
     private lateinit var scheduler: MusicCatalogSyncScheduler
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = MusicResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.MUSIC,
         title = "assembled",

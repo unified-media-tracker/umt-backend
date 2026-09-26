@@ -1,6 +1,6 @@
 package com.umt.core.media.book
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.BookResponse
 import com.umt.core.contribution.RoleType
 import com.umt.core.media.ContributorCreditService
 import com.umt.core.media.ExternalSourceType
@@ -26,7 +26,7 @@ class BookImporter(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    fun importBook(hardcoverBook: HardcoverBook): MediaItemResponse {
+    fun importBook(hardcoverBook: HardcoverBook): BookResponse {
         val existing = bookRepository.findByHardcoverId(hardcoverBook.id.toString())
         if (existing != null) {
             val updated = releaseDateSyncService.updateIfChanged(existing, hardcoverBook.parsedReleaseDate, "Hardcover")

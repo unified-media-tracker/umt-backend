@@ -1,7 +1,7 @@
 package com.umt.core.media.game
 
 import com.umt.api.generated.GameApi
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.GameResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
@@ -12,6 +12,6 @@ class GameController(
 ) : GameApi {
 
     @PreAuthorize("hasRole('ADMIN')")
-    override fun syncUpcomingGames(): ResponseEntity<List<MediaItemResponse>> =
+    override fun syncUpcomingGames(): ResponseEntity<List<GameResponse>> =
         ResponseEntity.ok(gameCatalogSyncScheduler.syncUpcomingGames())
 }

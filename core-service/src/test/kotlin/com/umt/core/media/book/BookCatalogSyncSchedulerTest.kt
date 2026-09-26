@@ -1,7 +1,7 @@
 package com.umt.core.media.book
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.BookResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.media.book.hardcover.HardcoverBook
@@ -21,7 +21,7 @@ class BookCatalogSyncSchedulerTest {
     private lateinit var bookImporter: BookImporter
     private lateinit var scheduler: BookCatalogSyncScheduler
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = BookResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.BOOK,
         title = "assembled",

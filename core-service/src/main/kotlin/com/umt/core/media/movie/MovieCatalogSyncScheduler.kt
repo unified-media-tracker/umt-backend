@@ -1,6 +1,6 @@
 package com.umt.core.media.movie
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MovieResponse
 import com.umt.core.media.movie.tmdb.TmdbClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -14,10 +14,10 @@ class MovieCatalogSyncScheduler(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "0 0 5 * * *")
-    fun syncUpcomingMovies(): List<MediaItemResponse> {
+    fun syncUpcomingMovies(): List<MovieResponse> {
         log.info("Starting scheduled upcoming-movies sync")
         val ids = tmdbClient.fetchUpcomingMovieIds()
-        val results = mutableListOf<MediaItemResponse>()
+        val results = mutableListOf<MovieResponse>()
 
         for (id in ids) {
             try {

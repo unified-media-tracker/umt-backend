@@ -1,6 +1,6 @@
 package com.umt.core.media.tvshow
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.TvShowResponse
 import com.umt.core.contribution.RoleType
 import com.umt.core.media.ContributorCreditService
 import com.umt.core.media.ExternalSourceType
@@ -28,7 +28,7 @@ class TvShowImporter(
 ) {
 
     @Transactional
-    fun importTvShow(tmdbId: Long): MediaItemResponse {
+    fun importTvShow(tmdbId: Long): TvShowResponse {
         val existing = tvShowRepository.findByTmdbId(tmdbId.toString())
         val tmdbShow = tmdbClient.fetchTvShow(tmdbId)
 
@@ -49,7 +49,7 @@ class TvShowImporter(
         return mediaResponseAssembler.assemble(saved)
     }
 
-    private fun updateExisting(existing: TvShow, incomingDate: LocalDate?): MediaItemResponse =
+    private fun updateExisting(existing: TvShow, incomingDate: LocalDate?): TvShowResponse =
         mediaResponseAssembler.assemble(releaseDateSyncService.updateIfChanged(existing, incomingDate, "TMDb"))
 
     private fun resolveGenres(names: List<String>): MutableSet<Genre> =

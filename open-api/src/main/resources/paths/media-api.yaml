@@ -121,7 +121,7 @@ listMedia:
     tags: [Media]
     operationId: listMedia
     summary: "List media items"
-    description: "Lists media items of one type, optionally filtered by release status and sorted. Public - no auth required."
+    description: "Lists media items of one type, optionally filtered by release status and release-date window, and sorted. Public - no auth required."
     parameters:
       - name: mediaCategory
         in: query
@@ -138,6 +138,16 @@ listMedia:
         required: false
         schema:
           $ref: '#/components/schemas/MediaSortOption'
+      - name: releaseDateFrom
+        in: query
+        required: false
+        description: >-
+          Only items releasing on or after this date, plus undated (TBA) ones, which can't be
+          placed before it. Lets a page skip the back catalogue - pass the first of the current
+          month to get what just released this month plus everything still to come.
+        schema:
+          type: string
+          format: date
     responses:
       '200':
         description: OK

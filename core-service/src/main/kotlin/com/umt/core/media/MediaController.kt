@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.util.*
 
 @RestController
@@ -21,9 +22,10 @@ class MediaController(
     override fun listMedia(
         mediaCategory: MediaCategory,
         status: ReleaseStatus?,
-        sort: MediaSortOption?
+        sort: MediaSortOption?,
+        releaseDateFrom: LocalDate?,
     ): ResponseEntity<List<MediaItemResponse>> =
-        ResponseEntity.ok(mediaService.listMedia(mediaCategory, status, sort))
+        ResponseEntity.ok(mediaService.listMedia(mediaCategory, status, sort, releaseDateFrom))
 
     override fun getMediaById(id: UUID, mediaCategory: MediaCategory?): ResponseEntity<MediaItemResponse> =
         ResponseEntity.ok(mediaService.getMediaById(id, mediaCategory))

@@ -24,6 +24,15 @@ object MediaSpecifications {
             )
         }
 
+    // Dated and not yet out or called off - the items whose delay signal still means something.
+    fun <T : MediaItem> awaitingAnalysis(): Specification<T> =
+        Specification { root, _, cb ->
+            cb.and(
+                cb.isNotNull(root.get<LocalDate>(RELEASE_DATE)),
+                cb.not(root.get<ReleaseStatus>(RELEASE_DATE_STATUS).`in`(ReleaseStatus.RELEASED, ReleaseStatus.CANCELED)),
+            )
+        }
+
     // Both nulls are "no filter at all" - an always-true specification, not a special case for callers.
     fun <T : MediaItem> listing(status: ReleaseStatus?, from: LocalDate?): Specification<T> =
         listOfNotNull(status?.let { withStatus<T>(it) }, from?.let { releasingFrom<T>(it) })

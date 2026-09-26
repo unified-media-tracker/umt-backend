@@ -1,6 +1,7 @@
 import logging
 import requests
 
+from datetime import date
 from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
 
@@ -31,10 +32,14 @@ Provide a sentiment score (-1.0 to 1.0) regarding the release date:
 - Neutral (0.0): General discussion.
 - Positive (0.1 to 1.0): Official date confirmation, early release, or game going gold.
 
-If the post explicitly names a specific release date (a day, or at minimum a month and year),
-extract it into 'extracted_release_date' as an ISO 8601 date (YYYY-MM-DD). Use the 1st of the
-month when only a month and year are given. Leave it null if no specific date is mentioned
-(e.g. only a vague window like "next year" or "Q3").
+Today's date is {today}. If the post explicitly names a specific release date (a day, or at
+minimum a month and year), extract it into 'extracted_release_date' as an ISO 8601 date
+(YYYY-MM-DD). Use the 1st of the month when only a month and year are given. If a day/month is
+given WITHOUT a year, infer the year using today's date: pick the nearest occurrence of that
+day on or after today, since release-date news is almost always about what's ahead, not what's
+already past. Never guess a year from habit - ground it in today's date or the post's own text.
+Leave the field null if no specific date is mentioned (e.g. only a vague window like "next year"
+or "Q3").
 
 Always think step-by-step in the 'reasoning' field before providing the final classification."""
 
@@ -82,8 +87,9 @@ def evaluate_post(media_title: str, post_text: str) -> PostEvaluation:
     log.debug("ANALYSIS: [%s]", media_title)
     log.debug("TEXT: %s...", post_text[:150])
 
+    system_prompt = SYSTEM_PROMPT_POST_EVAL.format(today=date.today().isoformat())
     prompt = f'Title: "{media_title}"\nPost: "{post_text}"'
-    evaluation, raw_json = ask_ollama(SYSTEM_PROMPT_POST_EVAL, prompt, PostEvaluation)
+    evaluation, raw_json = ask_ollama(system_prompt, prompt, PostEvaluation)
 
     log.debug("MODEL'S RAW ANSWER: %s", raw_json)
     log.debug("REASONING: %s", evaluation.reasoning)

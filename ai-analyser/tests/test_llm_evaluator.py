@@ -3,6 +3,7 @@ The LLM is the least trustworthy component in the service: it is a local 7B mode
 return structured JSON. These tests pin the contract at the boundary — a bad response has to
 surface as a typed error, never as a half-parsed object that reaches the database.
 """
+from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +11,7 @@ import requests
 from pydantic import BaseModel
 
 from app.analysis.llm_evaluator import MODEL, ask_ollama, evaluate_post
-from app.schemas import InformationType, PostEvaluation
+from app.schemas import MAX_PLAUSIBLE_FUTURE, MAX_PLAUSIBLE_PAST, InformationType, PostEvaluation
 
 
 class Tiny(BaseModel):
@@ -114,6 +115,17 @@ class TestEvaluatePost:
         assert "Silksong" in prompt
         assert "some news text" in prompt
 
+    @patch("app.analysis.llm_evaluator.requests.post")
+    def test_grounds_the_system_prompt_in_todays_date(self, post):
+        """Without this, the model has no anchor for a date given without a year and
+        hallucinates one from training data instead."""
+        post.return_value = ollama_response(VALID_EVALUATION)
+
+        evaluate_post("Silksong", "some news text")
+
+        system_prompt = post.call_args.kwargs["json"]["system"]
+        assert date.today().isoformat() in system_prompt
+
 
 class TestConfidenceNormalisation:
     """
@@ -169,6 +181,28 @@ class TestExtractedReleaseDateNormalisation:
     @pytest.mark.parametrize("bad_value", ["around Q3 2027", "next year", "2027-13-40", "", "   "])
     def test_a_malformed_or_vague_value_is_nulled_not_rejected(self, bad_value):
         assert self._evaluation(bad_value).extracted_release_date is None
+
+    def test_a_hallucinated_wrong_year_is_nulled(self):
+        """The real bug this guards against: a trailer caption with no year at all
+        ("In Theaters October 2") gets a plausible-looking but wrong year attached."""
+        wrong_year = date(date.today().year - 3, 10, 2).isoformat()
+        assert self._evaluation(wrong_year).extracted_release_date is None
+
+    def test_a_date_just_past_the_plausible_past_bound_is_nulled(self):
+        too_old = (date.today() - MAX_PLAUSIBLE_PAST - timedelta(days=1)).isoformat()
+        assert self._evaluation(too_old).extracted_release_date is None
+
+    def test_a_date_just_inside_the_plausible_past_bound_is_kept(self):
+        just_old_enough = (date.today() - MAX_PLAUSIBLE_PAST + timedelta(days=1)).isoformat()
+        assert self._evaluation(just_old_enough).extracted_release_date == just_old_enough
+
+    def test_a_date_just_past_the_plausible_future_bound_is_nulled(self):
+        too_far = (date.today() + MAX_PLAUSIBLE_FUTURE + timedelta(days=1)).isoformat()
+        assert self._evaluation(too_far).extracted_release_date is None
+
+    def test_a_date_just_inside_the_plausible_future_bound_is_kept(self):
+        just_soon_enough = (date.today() + MAX_PLAUSIBLE_FUTURE - timedelta(days=1)).isoformat()
+        assert self._evaluation(just_soon_enough).extracted_release_date == just_soon_enough
 
     @patch("app.analysis.llm_evaluator.requests.post")
     def test_evaluate_post_surfaces_the_extracted_date(self, post):

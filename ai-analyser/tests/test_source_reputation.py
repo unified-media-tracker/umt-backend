@@ -6,7 +6,7 @@ whole pipeline run.
 """
 from unittest.mock import MagicMock, patch
 
-from app.analysis.source_reputation import get_source_reputation
+from app.analysis.source_reputation import SYSTEM_PROMPT_SOURCE_EVAL, get_source_reputation
 from app.schemas import SourceReputationEvaluation
 
 
@@ -87,6 +87,21 @@ class TestCacheMiss:
             get_source_reputation("  IGN  ", session)
 
         assert session.add.call_args.args[0].source_name == "ign"
+
+
+class TestPromptCalibration:
+    """
+    The model scores unknown names against this tier list, so what it says about a studio's own
+    channel is behaviour, not decoration - without the tier, Warner Bros. lands on the 0.4
+    "unknown source" default and a studio's own date claim can't stand on its own.
+    """
+
+    def test_official_studio_channels_are_calibrated_as_their_own_tier(self):
+        for studio in ("Warner Bros.", "Universal Pictures", "PlayStation", "Disney Plus"):
+            assert studio in SYSTEM_PROMPT_SOURCE_EVAL
+
+    def test_trailer_aggregators_are_kept_out_of_it(self):
+        assert "trailer-aggregator" in SYSTEM_PROMPT_SOURCE_EVAL
 
 
 class TestLlmFailure:

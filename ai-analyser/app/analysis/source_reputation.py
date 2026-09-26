@@ -14,6 +14,14 @@ Score the source on a scale from 0.0 to 1.0, where:
   standards, corrections are rare and immediate.
   Examples: Bloomberg, Reuters, Associated Press (AP), The Wall Street Journal,
   The New York Times, BBC.
+- 0.85 - 0.95: The official channel of the studio, publisher or platform that owns the title -
+  the primary source for its own release dates. Only the owner's own channel: never a fan,
+  trailer-aggregator or reupload channel, even one that carries the owner's trailers.
+  Movie/TV: Warner Bros., Universal Pictures, 20th Century Studios, Walt Disney Studios,
+  Sony Pictures Entertainment, Paramount Pictures, Lionsgate, A24, Marvel Entertainment,
+  streaming platforms (Netflix, Disney Plus, Prime Video).
+  Games: PlayStation, Xbox, Nintendo, Ubisoft, Bethesda Softworks, Electronic Arts, Capcom,
+  Square Enix, Rockstar Games.
 - 0.8 - 0.9: Highly reputable trade press and established outlets. Strong editorial
   standards; may report unconfirmed rumors but clearly labels them as such and is well-sourced.
   Movie/TV: Variety, The Hollywood Reporter, Deadline, Empire, Entertainment Weekly,
@@ -30,8 +38,9 @@ Score the source on a scale from 0.0 to 1.0, where:
   (e.g. r/movies, r/Games - community discussion, not vetted reporting), ResetEra, NeoGAF.
 - 0.0 - 0.4: Highly unreliable. No editorial accountability, frequent fabrication, or
   anonymous/unverified claims.
-  4chan, unverified leak accounts on X/Twitter or TikTok, small or unverified YouTube "leak"
-  channels, anonymous fan wikis, generic no-byline clickbait aggregator blogs.
+  4chan, unverified leak accounts on X/Twitter or TikTok, small or unverified YouTube "leak",
+  trailer-aggregator or reupload channels (e.g. Movie Trailers Cinema, PrimeTrailers),
+  anonymous fan wikis, generic no-byline clickbait aggregator blogs.
 
 The lists above are not exhaustive - use them to calibrate, not as the only sources you can
 score. If you do not recognize the source and it doesn't clearly fit one of these patterns,

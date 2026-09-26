@@ -2,7 +2,8 @@ package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType
 import com.umt.api.generated.model.MediaItemRequest
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MediaResponse
+import com.umt.api.generated.model.BookResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory
 import com.umt.api.generated.model.ReleaseStatus
@@ -35,7 +36,7 @@ class MediaControllerTest {
         controller = MediaController(mediaService, similarMediaService)
     }
 
-    private fun response(title: String) = MediaItemResponse(
+    private fun response(title: String): MediaResponse = BookResponse(
         id = UUID.randomUUID(),
         mediaCategory = MediaCategory.BOOK,
         title = title,
@@ -80,7 +81,7 @@ class MediaControllerTest {
 
         val result = controller.listMedia(MediaCategory.MOVIE, null, null, null)
 
-        assertEquals(emptyList<MediaItemResponse>(), result.body)
+        assertEquals(emptyList<MediaResponse>(), result.body)
     }
 
     @Test

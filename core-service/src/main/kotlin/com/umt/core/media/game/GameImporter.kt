@@ -1,6 +1,6 @@
 package com.umt.core.media.game
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.GameResponse
 import com.umt.core.contribution.ContributorType
 import com.umt.core.contribution.RoleType
 import com.umt.core.media.ContributorCreditService
@@ -25,7 +25,7 @@ class GameImporter(
 ) {
 
     @Transactional
-    fun importGame(igdbGame: IgdbGame): MediaItemResponse {
+    fun importGame(igdbGame: IgdbGame): GameResponse {
         val existing = gameRepository.findByIgdbId(igdbGame.id.toString())
         if (existing != null) {
             val updated = releaseDateSyncService.updateIfChanged(existing, igdbGame.parsedReleaseDate, "IGDB")

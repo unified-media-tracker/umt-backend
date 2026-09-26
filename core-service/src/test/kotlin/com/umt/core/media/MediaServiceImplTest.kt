@@ -1,7 +1,8 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MovieResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
@@ -44,7 +45,7 @@ class MediaServiceImplTest {
     private lateinit var mediaMapper: MediaMapper
     private lateinit var service: MediaServiceImpl
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = MovieResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.MOVIE,
         title = "assembled",
@@ -74,6 +75,17 @@ class MediaServiceImplTest {
 
     private fun response(id: UUID, releaseDate: LocalDate? = null, popularityScore: BigDecimal = BigDecimal.ZERO, delayProbability: BigDecimal? = null) =
         fixedResponse.copy(id = id, releaseDate = releaseDate, popularityScore = popularityScore, latestDelayProbability = delayProbability)
+
+    private fun musicResponse(id: UUID) = MusicResponse(
+        id = id,
+        mediaCategory = ApiMediaCategory.MUSIC,
+        title = "assembled",
+        releaseDateStatus = ApiReleaseStatus.ANNOUNCED,
+        popularityScore = BigDecimal.ZERO,
+        ratingCount = 0,
+        externalSource = ApiExternalSourceType.MUSICBRAINZ,
+        externalSourceId = "1",
+    )
 
     @Nested
     @DisplayName("listMedia")
@@ -206,7 +218,7 @@ class MediaServiceImplTest {
             every { gameRepository.findById(id) } returns Optional.empty()
             every { bookRepository.findById(id) } returns Optional.empty()
             every { musicRepository.findById(id) } returns Optional.of(music)
-            every { mediaResponseAssembler.assemble(music) } returns fixedResponse.copy(id = id, mediaCategory = ApiMediaCategory.MUSIC)
+            every { mediaResponseAssembler.assemble(music) } returns musicResponse(id)
 
             val result = service.getMediaById(id)
 

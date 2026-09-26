@@ -1,6 +1,6 @@
 package com.umt.core.media
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MediaResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
@@ -31,7 +31,7 @@ class MediaServiceImpl(
         status: ApiReleaseStatus?,
         sort: MediaSortOption?,
         releaseDateFrom: LocalDate?,
-    ): List<MediaItemResponse> {
+    ): List<MediaResponse> {
         val domainStatus = status?.let { mediaMapper.toDomainReleaseStatus(it) }
 
         val responses = when (mediaMapper.toDomainMediaCategory(mediaCategory)) {
@@ -59,7 +59,7 @@ class MediaServiceImpl(
     // the five to look in, so this tries each in turn and takes the first hit - five tries the
     // worst case, but only for a title with no match at all; movie/tv_show/game are the most
     // likely hits, so they're checked first.
-    override fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory?): MediaItemResponse {
+    override fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory?): MediaResponse {
         if (mediaCategory != null) return getMediaByKnownType(id, mediaMapper.toDomainMediaCategory(mediaCategory))
 
         movieRepository.findById(id).orElse(null)?.let { return mediaResponseAssembler.assemble(it) }
@@ -70,7 +70,7 @@ class MediaServiceImpl(
         throw NoSuchElementException("Media item $id not found")
     }
 
-    private fun getMediaByKnownType(id: UUID, mediaCategory: MediaCategory): MediaItemResponse {
+    private fun getMediaByKnownType(id: UUID, mediaCategory: MediaCategory): MediaResponse {
         val response = when (mediaCategory) {
             MediaCategory.MOVIE -> movieRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
             MediaCategory.TV_SHOW -> tvShowRepository.findById(id).orElse(null)?.let { mediaResponseAssembler.assemble(it) }
@@ -84,7 +84,7 @@ class MediaServiceImpl(
     // Assembles every item across all five tables before picking RANDOM_MEDIA_ITEMS_LIMIT of
     // them - wasteful in principle, fine in practice at this catalogue's size, and it avoids
     // needing runtime type-dispatch anywhere else in the codebase for the one heterogeneous list.
-    override fun getUserRecommendations(userId: Long): List<MediaItemResponse> {
+    override fun getUserRecommendations(userId: Long): List<MediaResponse> {
         val pool = mediaResponseAssembler.assembleMovieList(movieRepository.findAll()) +
             mediaResponseAssembler.assembleTvShowList(tvShowRepository.findAll()) +
             mediaResponseAssembler.assembleGameList(gameRepository.findAll()) +
@@ -96,7 +96,7 @@ class MediaServiceImpl(
 
     // TBA/unscored items sort to the end regardless of direction, rather than being read as
     // "releases today" or "0% risk" - the same sentinel values the frontend uses for the same reason.
-    private fun List<MediaItemResponse>.sortedForResponse(sort: MediaSortOption?): List<MediaItemResponse> = when (sort) {
+    private fun List<MediaResponse>.sortedForResponse(sort: MediaSortOption?): List<MediaResponse> = when (sort) {
         MediaSortOption.DELAY_RISK -> sortedByDescending { it.latestDelayProbability ?: BigDecimal.valueOf(-1) }
         MediaSortOption.POPULARITY -> sortedByDescending { it.popularityScore }
         MediaSortOption.RELEASE_DATE, null -> sortedBy { it.releaseDate ?: LocalDate.MAX }

@@ -1,6 +1,6 @@
 package com.umt.core.media
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MediaResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
@@ -19,11 +19,11 @@ interface MediaService {
         status: ApiReleaseStatus?,
         sort: MediaSortOption?,
         releaseDateFrom: LocalDate? = null,
-    ): List<MediaItemResponse>
+    ): List<MediaResponse>
 
     // mediaCategory is an optional fast path - skips straight to that one table instead of trying
     // all five in turn when the caller already knows it
-    fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory? = null): MediaItemResponse
+    fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory? = null): MediaResponse
 
-    fun getUserRecommendations(userId: Long): List<MediaItemResponse>
+    fun getUserRecommendations(userId: Long): List<MediaResponse>
 }

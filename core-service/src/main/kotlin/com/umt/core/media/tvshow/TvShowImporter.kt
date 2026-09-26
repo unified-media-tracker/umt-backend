@@ -37,7 +37,7 @@ class TvShowImporter(
         val tvShow = tmdbShow.toTvShow()
         tvShow.genres = resolveGenres(tmdbShow.genres.map { it.name })
         val saved = tvShowRepository.save(tvShow)
-        mediaEventPublisher.publishIfUpcoming(saved)
+        mediaEventPublisher.requestAnalysisIfUpcoming(saved)
 
         // TMDb has no "creator" role of its own in our vocabulary — DIRECTOR is the closest
         // existing fit for "the person(s) who made this show" rather than adding a new role

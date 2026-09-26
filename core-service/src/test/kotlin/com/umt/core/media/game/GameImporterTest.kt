@@ -55,7 +55,7 @@ class GameImporterTest {
         importer = GameImporter(gameRepository, mediaResponseAssembler, mediaEventPublisher, releaseDateSyncService, contributorCreditService)
 
         every { gameRepository.save(any<Game>()) } answers { firstArg<Game>() }
-        every { mediaEventPublisher.publishIfUpcoming(any()) } returns Unit
+        every { mediaEventPublisher.requestAnalysisIfUpcoming(any()) } returns Unit
         every { contributorCreditService.credit(any<Game>(), any(), any(), any(), any(), any()) } returns Unit
         every { mediaResponseAssembler.assemble(any<Game>()) } returns fixedResponse
     }
@@ -99,7 +99,7 @@ class GameImporterTest {
         verify(exactly = 1) {
             contributorCreditService.credit(any<Game>(), ExternalSourceType.IGDB, "50", "Valve", RoleType.PUBLISHER, ContributorType.ORGANIZATION)
         }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test

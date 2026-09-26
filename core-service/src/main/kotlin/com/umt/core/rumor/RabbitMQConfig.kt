@@ -23,11 +23,11 @@ class RabbitMQConfig {
         BindingBuilder.bind(rumorSnapshotComputedQueue).to(eventsExchange).with(RUMOR_SNAPSHOT_COMPUTED_ROUTING_KEY)
 
     @Bean
-    fun mediaImportedQueue(): Queue = Queue(MEDIA_IMPORTED_QUEUE, true)
+    fun mediaAnalysisRequestedQueue(): Queue = Queue(MEDIA_ANALYSIS_REQUESTED_QUEUE, true)
 
     @Bean
-    fun mediaImportedBinding(mediaImportedQueue: Queue, eventsExchange: TopicExchange): Binding =
-        BindingBuilder.bind(mediaImportedQueue).to(eventsExchange).with(MEDIA_IMPORTED_ROUTING_KEY)
+    fun mediaAnalysisRequestedBinding(mediaAnalysisRequestedQueue: Queue, eventsExchange: TopicExchange): Binding =
+        BindingBuilder.bind(mediaAnalysisRequestedQueue).to(eventsExchange).with(MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY)
 
     @Bean
     fun mediaReleasedQueue(): Queue = Queue(MEDIA_RELEASED_QUEUE, true)
@@ -50,8 +50,8 @@ class RabbitMQConfig {
         const val EVENTS_EXCHANGE = "umt.events"
         const val RUMOR_SNAPSHOT_COMPUTED_ROUTING_KEY = "rumor.snapshot.computed"
         const val RUMOR_SNAPSHOT_COMPUTED_QUEUE = "core-service.rumor-snapshot-computed"
-        const val MEDIA_IMPORTED_ROUTING_KEY = "media.imported"
-        const val MEDIA_IMPORTED_QUEUE = "ai-analyser.media-imported"
+        const val MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY = "media.analysis.requested"
+        const val MEDIA_ANALYSIS_REQUESTED_QUEUE = "ai-analyser.media-analysis-requested"
         const val MEDIA_RELEASED_ROUTING_KEY = "media.released"
         const val MEDIA_RELEASED_QUEUE = "ai-analyser.media-released"
     }

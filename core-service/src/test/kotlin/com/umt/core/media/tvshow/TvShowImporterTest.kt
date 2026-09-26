@@ -65,7 +65,7 @@ class TvShowImporterTest {
         every { genreRepository.findByName(any()) } returns null
         every { genreRepository.save(any<Genre>()) } answers { firstArg<Genre>().apply { id = UUID.randomUUID() } }
         every { tvShowRepository.save(any<TvShow>()) } answers { firstArg<TvShow>() }
-        every { mediaEventPublisher.publishIfUpcoming(any()) } returns Unit
+        every { mediaEventPublisher.requestAnalysisIfUpcoming(any()) } returns Unit
         every { contributorCreditService.credit(any<TvShow>(), any(), any(), any(), any(), any()) } returns Unit
         every { mediaResponseAssembler.assemble(any<TvShow>()) } returns fixedResponse
     }
@@ -98,7 +98,7 @@ class TvShowImporterTest {
         verify(exactly = 1) {
             contributorCreditService.credit(any<TvShow>(), ExternalSourceType.TMDB, "228068", "D. B. Weiss", RoleType.DIRECTOR, any())
         }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test
@@ -120,7 +120,7 @@ class TvShowImporterTest {
         assertEquals(fixedResponse, result)
         verify(exactly = 0) { tvShowRepository.save(any()) }
         verify(exactly = 0) { contributorCreditService.credit(any<TvShow>(), any(), any(), any(), any(), any()) }
-        verify(exactly = 0) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 0) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test

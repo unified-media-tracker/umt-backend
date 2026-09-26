@@ -25,7 +25,7 @@ CURATED_FEEDS = [
 ]
 
 
-def fetch_posts(media_title: str, media_type: str | None = None, limit_per_feed: int = 5):
+def fetch_posts(media_title: str, media_category: str | None = None, limit_per_feed: int = 5):
     """
     Fetches recent articles from a fixed list of curated trade press RSS feeds,
     keeping only entries that mention media_title in their title or summary.
@@ -35,7 +35,7 @@ def fetch_posts(media_title: str, media_type: str | None = None, limit_per_feed:
     results = []
 
     for source_name, feed_url, applicable_types in CURATED_FEEDS:
-        if media_type is not None and media_type not in applicable_types:
+        if media_category is not None and media_category not in applicable_types:
             continue
 
         try:

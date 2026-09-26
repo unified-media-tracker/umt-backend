@@ -1,9 +1,12 @@
 import json
+import logging
 import pika
 
 from datetime import datetime, timezone
 from uuid import UUID
 from app.common.config import settings
+
+log = logging.getLogger(__name__)
 
 EXCHANGE = "umt.events"
 ROUTING_KEY = "rumor.snapshot.computed"
@@ -14,10 +17,18 @@ def publish_rumor_computed(
         delay_probability: float,
         aggregate_sentiment_score: float | None,
         top_source_name: str | None,
+        media_category: str | None = None,
         confidence_trend: str | None = None,
 ):
     if pika is None:
         raise ImportError("pika is not installed or has a syntax error in this environment.")
+
+    if media_category is None:
+        log.warning(
+            "No media_category for %s - skipping publish, the snapshot can't be stored without it",
+            media_item_id,
+        )
+        return
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
@@ -30,6 +41,7 @@ def publish_rumor_computed(
 
     payload = {
         "media_item_id": str(media_item_id),
+        "media_category": media_category,
         "delay_probability": delay_probability,
         "aggregate_sentiment_score": aggregate_sentiment_score,
         "top_source_name": top_source_name,

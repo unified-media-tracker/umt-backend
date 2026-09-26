@@ -4,9 +4,9 @@ import urllib.parse
 import feedparser
 
 
-def fetch_posts(media_title: str, media_type: str | None = None, limit: int = 3):
+def fetch_posts(media_title: str, media_category: str | None = None, limit: int = 3):
     """
-    Fetches news from Google News RSS based on the query. The media_type is accepted for a
+    Fetches news from Google News RSS based on the query. The media_category is accepted for a
     uniform fetch_posts signature across ingestion sources (aggregator.py calls every source
     the same way) but unused here - Google News is a general aggregator, relevant to every
     media type.

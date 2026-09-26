@@ -1,5 +1,6 @@
 package com.umt.core.media
 
+import com.umt.core.media.MediaSpecifications.awaitingAnalysis
 import com.umt.core.media.MediaSpecifications.listing
 import com.umt.core.media.movie.Movie
 import com.umt.core.media.movie.MovieRepository
@@ -98,5 +99,22 @@ class MediaSpecificationsTest {
             setOf("First day of the month", "Out this month"),
             titles(status = ReleaseStatus.RELEASED, from = monthStart),
         )
+    }
+
+    private fun awaiting(): Set<String> =
+        movieRepository.findAll(awaitingAnalysis<Movie>()).map { it.title }.toSet()
+
+    @Test
+    @DisplayName("released, called-off and undated items are never awaiting analysis")
+    fun awaitingAnalysisSkipsWhatHasNothingLeftToSlip() {
+        movie("Released long ago", LocalDate.of(1976, 11, 5), ReleaseStatus.RELEASED)
+        movie("Called off", LocalDate.of(2026, 10, 1), ReleaseStatus.CANCELED)
+        movie("Date to be announced", null, ReleaseStatus.TBA)
+        movie("Overdue", LocalDate.of(2026, 9, 20), ReleaseStatus.CONFIRMED)
+        movie("Next month", LocalDate.of(2026, 10, 9), ReleaseStatus.CONFIRMED)
+        movie("Next year", LocalDate.of(2027, 3, 12), ReleaseStatus.DELAYED)
+        movie("Announced", LocalDate.of(2026, 12, 4), ReleaseStatus.ANNOUNCED)
+
+        assertEquals(setOf("Overdue", "Next month", "Next year", "Announced"), awaiting())
     }
 }

@@ -66,7 +66,7 @@ class MovieImporterTest {
 
         every { genreRepository.findByName(any()) } returns null
         every { genreRepository.save(any<Genre>()) } answers { firstArg<Genre>().apply { id = UUID.randomUUID() } }
-        every { mediaEventPublisher.publishIfUpcoming(any()) } returns Unit
+        every { mediaEventPublisher.requestAnalysisIfUpcoming(any()) } returns Unit
         every { contributorCreditService.credit(any<Movie>(), any(), any(), any(), any(), any()) } returns Unit
     }
 
@@ -114,7 +114,7 @@ class MovieImporterTest {
         verify(exactly = 0) {
             contributorCreditService.credit(any<Movie>(), any(), "700", any(), any(), any())
         }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test
@@ -136,6 +136,6 @@ class MovieImporterTest {
         assertEquals(fixedResponse, result)
         verify(exactly = 0) { movieRepository.save(any()) }
         verify(exactly = 0) { contributorCreditService.credit(any<Movie>(), any(), any(), any(), any(), any()) }
-        verify(exactly = 0) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 0) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 }

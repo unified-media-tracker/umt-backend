@@ -63,7 +63,7 @@ class MusicImporterTest {
         )
 
         every { musicRepository.save(any<Music>()) } answers { firstArg<Music>() }
-        every { mediaEventPublisher.publishIfUpcoming(any()) } returns Unit
+        every { mediaEventPublisher.requestAnalysisIfUpcoming(any()) } returns Unit
         every { contributorCreditService.credit(any<Music>(), any(), any(), any(), any(), any()) } returns Unit
         every { mediaResponseAssembler.assemble(any<Music>()) } returns fixedResponse
     }
@@ -127,7 +127,7 @@ class MusicImporterTest {
         verify(exactly = 1) {
             contributorCreditService.credit(any<Music>(), ExternalSourceType.MUSICBRAINZ, "artist-1", "Radiohead", RoleType.ARTIST, any())
         }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test

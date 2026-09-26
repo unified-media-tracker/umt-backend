@@ -12,8 +12,7 @@ enum class ExternalSourceType { TMDB, IGDB, MUSICBRAINZ, HARDCOVER }
  * Plain Kotlin interface, not a JPA entity or @MappedSuperclass — Movie/TvShow/Game/Book/Music
  * are five independent tables, each with only the fields that genuinely apply to that type. This
  * exists purely, so the handful of things that are legitimately the same across all five (crediting
- * a contributor, recording a delay-probability snapshot, logging a release-status change,
- * publishing the media.imported/media.released events, cross-type search) can be written once
+ * a contributor, recording a delay-probability snapshot, cross-type search, etc.) can be written once
  * against one type instead of five times. Hibernate never sees this interface.
  */
 interface MediaItem {

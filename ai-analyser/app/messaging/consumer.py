@@ -11,8 +11,8 @@ from app.pipeline import run_pipeline_for_media_item
 log = logging.getLogger(__name__)
 
 EXCHANGE = "umt.events"
-MEDIA_IMPORTED_QUEUE = "ai-analyser.media-imported"
-MEDIA_IMPORTED_ROUTING_KEY = "media.imported"
+MEDIA_ANALYSIS_REQUESTED_QUEUE = "ai-analyser.media-analysis-requested"
+MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY = "media.analysis.requested"
 MEDIA_RELEASED_QUEUE = "ai-analyser.media-released"
 MEDIA_RELEASED_ROUTING_KEY = "media.released"
 
@@ -28,13 +28,13 @@ def start_consumer():
 
     channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", durable=True)
 
-    channel.queue_declare(queue=MEDIA_IMPORTED_QUEUE, durable=True)
-    channel.queue_bind(exchange=EXCHANGE, queue=MEDIA_IMPORTED_QUEUE, routing_key=MEDIA_IMPORTED_ROUTING_KEY)
+    channel.queue_declare(queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, durable=True)
+    channel.queue_bind(exchange=EXCHANGE, queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, routing_key=MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY)
 
     channel.queue_declare(queue=MEDIA_RELEASED_QUEUE, durable=True)
     channel.queue_bind(exchange=EXCHANGE, queue=MEDIA_RELEASED_QUEUE, routing_key=MEDIA_RELEASED_ROUTING_KEY)
 
-    def media_imported_callback(ch, method, properties, body):
+    def media_analysis_requested_callback(ch, method, properties, body):
         try:
             payload = json.loads(body)
 
@@ -57,14 +57,14 @@ def start_consumer():
             media_category = payload.get("media_category")
             known_release_date = payload.get("release_date")
 
-            log.info("Received media.imported event for %s", media_item_id)
+            log.info("Received media.analysis.requested event for %s", media_item_id)
 
             run_pipeline_for_media_item(
                 media_item_id, title, media_category=media_category, known_release_date=known_release_date,
             )
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception:
-            log.exception("Error processing media.imported message: %s", body)
+            log.exception("Error processing media.analysis.requested message: %s", body)
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def media_released_callback(ch, method, properties, body):
@@ -93,8 +93,8 @@ def start_consumer():
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue=MEDIA_IMPORTED_QUEUE, on_message_callback=media_imported_callback)
+    channel.basic_consume(queue=MEDIA_ANALYSIS_REQUESTED_QUEUE, on_message_callback=media_analysis_requested_callback)
     channel.basic_consume(queue=MEDIA_RELEASED_QUEUE, on_message_callback=media_released_callback)
 
-    log.info("Started RabbitMQ consumer for %s and %s", MEDIA_IMPORTED_QUEUE, MEDIA_RELEASED_QUEUE)
+    log.info("Started RabbitMQ consumer for %s and %s", MEDIA_ANALYSIS_REQUESTED_QUEUE, MEDIA_RELEASED_QUEUE)
     channel.start_consuming()

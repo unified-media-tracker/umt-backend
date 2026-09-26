@@ -10,7 +10,7 @@ signals.
 | `core-service` | Kotlin, Spring Boot, JPA, PostgreSQL | Catalog, users, reviews; imports from TMDb / IGDB / MusicBrainz / Metacritic |
 | `shared` | Kotlin | Cross-service pieces (Keycloak role converter, MapStruct config) |
 | `open-api` | OpenAPI generator | Contract-first API types generated from `umt-api.yaml` |
-| `ai-analyser` | Python, FastAPI, SQLAlchemy | Consumes `media.imported`, scores delay probability via a local LLM |
+| `ai-analyser` | Python, FastAPI, SQLAlchemy | Consumes `media.analysis.requested`, scores delay probability via a local LLM |
 
 Services talk over a RabbitMQ topic exchange (`umt.events`).
 

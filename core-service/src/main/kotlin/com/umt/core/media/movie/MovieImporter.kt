@@ -45,7 +45,7 @@ class MovieImporter(
         movie.genres = resolveGenres(tmdbMovie.genres.map { it.name })
         movie.runtimeMinutes = tmdbMovie.runtime
         val saved = movieRepository.save(movie)
-        mediaEventPublisher.publishIfUpcoming(saved)
+        mediaEventPublisher.requestAnalysisIfUpcoming(saved)
         creditMovieCrew(saved, tmdbMovie.credits?.crew ?: emptyList())
 
         return mediaResponseAssembler.assemble(saved)

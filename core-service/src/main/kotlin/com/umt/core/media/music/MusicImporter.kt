@@ -60,7 +60,7 @@ class MusicImporter(
         } else {
             contributorCreditService.credit(saved, ExternalSourceType.MUSICBRAINZ, artistRef.id, artistRef.name, RoleType.ARTIST)
         }
-        mediaEventPublisher.publishIfUpcoming(saved)
+        mediaEventPublisher.requestAnalysisIfUpcoming(saved)
 
         return mediaResponseAssembler.assemble(saved)
     }

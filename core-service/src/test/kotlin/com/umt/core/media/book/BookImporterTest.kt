@@ -52,7 +52,7 @@ class BookImporterTest {
         importer = BookImporter(bookRepository, mediaResponseAssembler, mediaEventPublisher, releaseDateSyncService, contributorCreditService)
 
         every { bookRepository.save(any<Book>()) } answers { firstArg<Book>() }
-        every { mediaEventPublisher.publishIfUpcoming(any()) } returns Unit
+        every { mediaEventPublisher.requestAnalysisIfUpcoming(any()) } returns Unit
         every { contributorCreditService.credit(any<Book>(), any(), any(), any(), any(), any()) } returns Unit
         every { mediaResponseAssembler.assemble(any<Book>()) } returns fixedResponse
     }
@@ -88,7 +88,7 @@ class BookImporterTest {
         verify(exactly = 1) {
             contributorCreditService.credit(any<Book>(), ExternalSourceType.HARDCOVER, "7", "Frank Herbert", RoleType.AUTHOR, any())
         }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 
     @Test
@@ -99,6 +99,6 @@ class BookImporterTest {
 
         assertEquals(fixedResponse, result)
         verify(exactly = 0) { contributorCreditService.credit(any<Book>(), any(), any(), any(), any(), any()) }
-        verify(exactly = 1) { mediaEventPublisher.publishIfUpcoming(any()) }
+        verify(exactly = 1) { mediaEventPublisher.requestAnalysisIfUpcoming(any()) }
     }
 }

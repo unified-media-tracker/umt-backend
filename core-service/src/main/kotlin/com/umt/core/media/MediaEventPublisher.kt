@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component
 @Component
 class MediaEventPublisher(private val rabbitTemplate: RabbitTemplate) {
 
-    fun publishIfUpcoming(mediaItem: MediaItem) {
+    fun requestAnalysisIfUpcoming(mediaItem: MediaItem) {
         if (mediaItem.releaseDateStatus == ReleaseStatus.RELEASED) return
         val id = mediaItem.id ?: return
 
         rabbitTemplate.convertAndSend(
             RabbitMQConfig.EVENTS_EXCHANGE,
-            RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
-            MediaImportedEvent(
+            RabbitMQConfig.MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY,
+            MediaAnalysisRequestedEvent(
                 mediaItemId = id,
                 title = mediaItem.title,
                 mediaCategory = mediaItem.mediaCategory,

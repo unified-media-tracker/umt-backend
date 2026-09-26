@@ -14,7 +14,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * ai-analyser only ever reacts to 'media.imported', so publishing the wrong things here is
+ * ai-analyser only ever reacts to 'media.analysis.requested', so publishing the wrong things here is
  * expensive: an already-released item would trigger a pointless LLM run over news that can no
  * longer change anything.
  */
@@ -44,18 +44,18 @@ class MediaEventPublisherTest {
     )
 
     @Test
-    fun `publishes an upcoming item to the events exchange with the media-imported routing key`() {
+    fun `publishes an upcoming item to the events exchange with the media-analysis-requested routing key`() {
         val id = UUID.randomUUID()
 
-        publisher.publishIfUpcoming(
+        publisher.requestAnalysisIfUpcoming(
             mediaItem(id = id, title = "Silksong", releaseDate = LocalDate.of(2026, 12, 1)),
         )
 
-        val payload = slot<MediaImportedEvent>()
+        val payload = slot<MediaAnalysisRequestedEvent>()
         verify(exactly = 1) {
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EVENTS_EXCHANGE,
-                RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
+                RabbitMQConfig.MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY,
                 capture(payload),
             )
         }
@@ -67,9 +67,9 @@ class MediaEventPublisherTest {
 
     @Test
     fun `publishes a null release date as-is for a TBA item`() {
-        publisher.publishIfUpcoming(mediaItem(releaseDate = null))
+        publisher.requestAnalysisIfUpcoming(mediaItem(releaseDate = null))
 
-        val payload = slot<MediaImportedEvent>()
+        val payload = slot<MediaAnalysisRequestedEvent>()
         verify(exactly = 1) {
             rabbitTemplate.convertAndSend(any<String>(), any<String>(), capture(payload))
         }
@@ -78,7 +78,7 @@ class MediaEventPublisherTest {
 
     @Test
     fun `does not publish an already released item`() {
-        publisher.publishIfUpcoming(mediaItem(status = ReleaseStatus.RELEASED))
+        publisher.requestAnalysisIfUpcoming(mediaItem(status = ReleaseStatus.RELEASED))
 
         verify(exactly = 0) {
             rabbitTemplate.convertAndSend(any<String>(), any<String>(), any<Any>())
@@ -87,7 +87,7 @@ class MediaEventPublisherTest {
 
     @Test
     fun `does not publish an unsaved item that has no id yet`() {
-        publisher.publishIfUpcoming(mediaItem(id = null))
+        publisher.requestAnalysisIfUpcoming(mediaItem(id = null))
 
         verify(exactly = 0) {
             rabbitTemplate.convertAndSend(any<String>(), any<String>(), any<Any>())
@@ -99,14 +99,14 @@ class MediaEventPublisherTest {
         val publishable = ReleaseStatus.entries.filter { it != ReleaseStatus.RELEASED }
 
         publishable.forEach { status ->
-            publisher.publishIfUpcoming(mediaItem(status = status))
+            publisher.requestAnalysisIfUpcoming(mediaItem(status = status))
         }
 
         verify(exactly = publishable.size) {
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EVENTS_EXCHANGE,
-                RabbitMQConfig.MEDIA_IMPORTED_ROUTING_KEY,
-                any<MediaImportedEvent>(),
+                RabbitMQConfig.MEDIA_ANALYSIS_REQUESTED_ROUTING_KEY,
+                any<MediaAnalysisRequestedEvent>(),
             )
         }
     }

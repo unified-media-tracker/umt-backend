@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 # source_name, feed URL, the media types it's relevant to) - verified, reachable and
 # parseable manually before being hardcoded here. Media type strings match core-service's
 # MediaType enum (MOVIE, TV_SHOW, GAME, BOOK, MUSIC) as it comes over the wire in the
-# media.imported event - no point asking IGN about a book.
+# media.analysis.requested event - no point asking IGN about a book.
 CURATED_FEEDS = [
     ("IGN", "https://feeds.ign.com/ign/all", {"GAME"}),
     ("Eurogamer", "https://www.eurogamer.net/feed", {"GAME"}),

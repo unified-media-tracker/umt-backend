@@ -41,7 +41,7 @@ class BookImporter(
         } else {
             contributorCreditService.credit(saved, ExternalSourceType.HARDCOVER, author.id.toString(), author.name, RoleType.AUTHOR)
         }
-        mediaEventPublisher.publishIfUpcoming(saved)
+        mediaEventPublisher.requestAnalysisIfUpcoming(saved)
 
         return mediaResponseAssembler.assemble(saved)
     }

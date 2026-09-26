@@ -55,6 +55,12 @@ musicbrainz:
   base-url: https://musicbrainz.org/ws/2
   user-agent: "UMT-CatalogSync/0.1"
 
+listenbrainz:
+  base-url: https://labs.api.listenbrainz.org
+  user-agent: "UMT-CatalogSync/0.1"
+  # The endpoint answers 400 to any algorithm name it doesn't list.
+  similar-artists-algorithm: session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30
+
 igdb:
   client-id: ${IGDB_CLIENT_ID:}
   client-secret: ${IGDB_CLIENT_SECRET:}

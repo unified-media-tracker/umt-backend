@@ -1,0 +1,15 @@
+syncUpcomingMusic:
+  post:
+    tags: [Music]
+    operationId: syncUpcomingMusic
+    summary: "Sync upcoming music from Metacritic + MusicBrainz"
+    description: "Scrapes Metacritic's upcoming album calendar for {artist, title, date}, resolves each against MusicBrainz, and imports confident matches. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './media-api.yaml#/components/schemas/MusicResponse'

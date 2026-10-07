@@ -1,0 +1,15 @@
+syncUpcomingBooks:
+  post:
+    tags: [Book]
+    operationId: syncUpcomingBooks
+    summary: "Sync upcoming books from Hardcover"
+    description: "Queries Hardcover's GraphQL API for books with a future release_date and imports them, crediting authors. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './media-api.yaml#/components/schemas/BookResponse'

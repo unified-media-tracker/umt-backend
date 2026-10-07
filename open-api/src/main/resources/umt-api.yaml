@@ -27,19 +27,19 @@ paths:
   /api/core/media/{id}/similar:
     $ref: './paths/media-api.yaml#/getSimilarMedia'
   /api/core/media/import/tmdb/movie/{tmdbId}:
-    $ref: './paths/media-api.yaml#/importMovieFromTmdb'
+    $ref: './paths/movie-api.yaml#/importMovieFromTmdb'
   /api/core/media/import/tmdb/tv/{tmdbId}:
-    $ref: './paths/media-api.yaml#/importTvShowFromTmdb'
+    $ref: './paths/tv-show-api.yaml#/importTvShowFromTmdb'
   /api/core/media/sync/upcoming-movies:
-    $ref: './paths/media-api.yaml#/syncUpcomingMovies'
+    $ref: './paths/movie-api.yaml#/syncUpcomingMovies'
   /api/core/media/sync/upcoming-tv-series:
-    $ref: './paths/media-api.yaml#/syncUpcomingTvSeries'
+    $ref: './paths/tv-show-api.yaml#/syncUpcomingTvSeries'
   /api/core/media/sync/upcoming-music:
-    $ref: './paths/media-api.yaml#/syncUpcomingMusic'
+    $ref: './paths/music-api.yaml#/syncUpcomingMusic'
   /api/core/media/sync/upcoming-games:
-    $ref: './paths/media-api.yaml#/syncUpcomingGames'
+    $ref: './paths/game-api.yaml#/syncUpcomingGames'
   /api/core/media/sync/upcoming-books:
-    $ref: './paths/media-api.yaml#/syncUpcomingBooks'
+    $ref: './paths/book-api.yaml#/syncUpcomingBooks'
   /api/core/media/recommendations:
     $ref: './paths/media-api.yaml#/getRecommendations'
   /api/core/user/all:

@@ -1,124 +1,6 @@
-importMovieFromTmdb:
-  post:
-    tags: [Movie]
-    operationId: importMovieFromTmdb
-    summary: "Import movie from TMDB"
-    description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
-    parameters:
-      - name: tmdbId
-        in: path
-        required: true
-        schema: { type: integer, format: int64 }
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MovieResponse'
-
-importTvShowFromTmdb:
-  post:
-    tags: [TvShow]
-    operationId: importTvShowFromTmdb
-    summary: "Import TV show from TMDB"
-    description: "Imports a TV show from TMDB by its ID. Requires ADMIN role."
-    parameters:
-      - name: tmdbId
-        in: path
-        required: true
-        schema: { type: integer, format: int64 }
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TvShowResponse'
-
-syncUpcomingMovies:
-  post:
-    tags: [Movie]
-    operationId: syncUpcomingMovies
-    summary: "Sync upcoming movies from TMDB"
-    description: "Queries TMDB's /movie/upcoming and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/MovieResponse'
-
-syncUpcomingTvSeries:
-  post:
-    tags: [TvShow]
-    operationId: syncUpcomingTvSeries
-    summary: "Sync upcoming TV series from TMDB"
-    description: "Queries TMDB's /discover/tv filtered to a future first_air_date and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/TvShowResponse'
-
-syncUpcomingMusic:
-  post:
-    tags: [Music]
-    operationId: syncUpcomingMusic
-    summary: "Sync upcoming music from Metacritic + MusicBrainz"
-    description: "Scrapes Metacritic's upcoming album calendar for {artist, title, date}, resolves each against MusicBrainz, and imports confident matches. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/MusicResponse'
-
-syncUpcomingGames:
-  post:
-    tags: [Game]
-    operationId: syncUpcomingGames
-    summary: "Sync upcoming games from IGDB"
-    description: "Queries IGDB for main-category games with a future first_release_date and imports them. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/GameResponse'
-
-syncUpcomingBooks:
-  post:
-    tags: [Book]
-    operationId: syncUpcomingBooks
-    summary: "Sync upcoming books from Hardcover"
-    description: "Queries Hardcover's GraphQL API for books with a future release_date and imports them, crediting authors. Requires ADMIN role. Also runs automatically once a day."
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/BookResponse'
-
 listMedia:
   get:
-    tags: [Media]
+    tags: [ Media ]
     operationId: listMedia
     summary: "List media items"
     description: "Lists media items of one type, optionally filtered by release status and release-date window, and sorted. Public - no auth required."
@@ -160,7 +42,7 @@ listMedia:
 
 getMediaById:
   get:
-    tags: [Media]
+    tags: [ Media ]
     operationId: getMediaById
     summary: "Get a media item by id"
     description: >-
@@ -190,7 +72,7 @@ getMediaById:
 
 getSimilarMedia:
   get:
-    tags: [Media]
+    tags: [ Media ]
     operationId: getSimilarMedia
     summary: "Get titles similar to this media item"
     description: >-
@@ -225,7 +107,7 @@ getSimilarMedia:
 
 getRecommendations:
   post:
-    tags: [Media]
+    tags: [ Media ]
     operationId: getRecommendations
     summary: "Get recommended media content"
     description: "Returns a list of recommended movies based on"
@@ -302,12 +184,12 @@ components:
           uniqueItems: true
           items:
             $ref: '#/components/schemas/GenreResponse'
-          default: []
+          default: [ ]
         contributors:
           type: array
           items:
             $ref: '#/components/schemas/ContributorResponse'
-          default: []
+          default: [ ]
         previousReleaseDate:
           type: string
           format: date
@@ -358,7 +240,7 @@ components:
 
     ContributorResponse:
       type: object
-      required: [id, name, contributorType, role]
+      required: [ id, name, contributorType, role ]
       properties:
         id:
           type: string
@@ -389,7 +271,7 @@ components:
 
     GenreResponse:
       type: object
-      required: [id, name]
+      required: [ id, name ]
       properties:
         id:
           type: string
@@ -441,7 +323,7 @@ components:
 
     MediaItemRequest:
       type: object
-      required: [userId]
+      required: [ userId ]
       properties:
         userId:
           type: integer

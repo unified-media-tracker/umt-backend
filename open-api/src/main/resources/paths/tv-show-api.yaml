@@ -1,0 +1,34 @@
+importTvShowFromTmdb:
+  post:
+    tags: [TvShow]
+    operationId: importTvShowFromTmdb
+    summary: "Import TV show from TMDB"
+    description: "Imports a TV show from TMDB by its ID. Requires ADMIN role."
+    parameters:
+      - name: tmdbId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: './media-api.yaml#/components/schemas/TvShowResponse'
+
+syncUpcomingTvSeries:
+  post:
+    tags: [TvShow]
+    operationId: syncUpcomingTvSeries
+    summary: "Sync upcoming TV series from TMDB"
+    description: "Queries TMDB's /discover/tv filtered to a future first_air_date and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './media-api.yaml#/components/schemas/TvShowResponse'

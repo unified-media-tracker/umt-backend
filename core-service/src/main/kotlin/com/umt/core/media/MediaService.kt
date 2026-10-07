@@ -24,6 +24,4 @@ interface MediaService {
     // mediaCategory is an optional fast path - skips straight to that one table instead of trying
     // all five in turn when the caller already knows it
     fun getMediaById(id: UUID, mediaCategory: ApiMediaCategory? = null): MediaResponse
-
-    fun getUserRecommendations(userId: Long): List<MediaResponse>
 }

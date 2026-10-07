@@ -81,19 +81,6 @@ class MediaServiceImpl(
         return response ?: throw NoSuchElementException("Media item $id not found")
     }
 
-    // Assembles every item across all five tables before picking RANDOM_MEDIA_ITEMS_LIMIT of
-    // them - wasteful in principle, fine in practice at this catalogue's size, and it avoids
-    // needing runtime type-dispatch anywhere else in the codebase for the one heterogeneous list.
-    override fun getUserRecommendations(userId: Long): List<MediaResponse> {
-        val pool = mediaResponseAssembler.assembleMovieList(movieRepository.findAll()) +
-            mediaResponseAssembler.assembleTvShowList(tvShowRepository.findAll()) +
-            mediaResponseAssembler.assembleGameList(gameRepository.findAll()) +
-            mediaResponseAssembler.assembleBookList(bookRepository.findAll()) +
-            mediaResponseAssembler.assembleMusicList(musicRepository.findAll())
-
-        return pool.shuffled().take(RANDOM_MEDIA_ITEMS_LIMIT)
-    }
-
     // TBA/unscored items sort to the end regardless of direction, rather than being read as
     // "releases today" or "0% risk" - the same sentinel values the frontend uses for the same reason.
     private fun List<MediaResponse>.sortedForResponse(sort: MediaSortOption?): List<MediaResponse> = when (sort) {
@@ -102,7 +89,4 @@ class MediaServiceImpl(
         MediaSortOption.RELEASE_DATE, null -> sortedBy { it.releaseDate ?: LocalDate.MAX }
     }
 
-    companion object {
-        const val RANDOM_MEDIA_ITEMS_LIMIT = 10
-    }
 }

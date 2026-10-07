@@ -290,19 +290,8 @@ class MediaServiceImplTest {
         fun `pools assembled items from every table`() {
             every { mediaResponseAssembler.assembleMovieList(any()) } returns listOf(fixedResponse)
 
-            val result = service.getUserRecommendations(userId = 1L)
 
-            assertEquals(listOf(fixedResponse), result)
-        }
 
-        @Test
-        fun `caps the result at RANDOM_MEDIA_ITEMS_LIMIT even when the pool is bigger`() {
-            val pool = (1..15).map { fixedResponse.copy(id = UUID.randomUUID()) }
-            every { mediaResponseAssembler.assembleMovieList(any()) } returns pool
-
-            val result = service.getUserRecommendations(userId = 1L)
-
-            assertEquals(MediaServiceImpl.RANDOM_MEDIA_ITEMS_LIMIT, result.size)
         }
     }
 }

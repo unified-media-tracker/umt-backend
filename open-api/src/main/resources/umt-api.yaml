@@ -40,8 +40,6 @@ paths:
     $ref: './paths/game-api.yaml#/syncUpcomingGames'
   /api/core/media/sync/upcoming-books:
     $ref: './paths/book-api.yaml#/syncUpcomingBooks'
-  /api/core/media/recommendations:
-    $ref: './paths/media-api.yaml#/getRecommendations'
   /api/core/user/all:
     $ref: './paths/user-api.yaml#/getAllUsers'
   /api/core/user/create:

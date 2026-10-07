@@ -37,6 +37,11 @@ sourceSets {
     }
 }
 
+// Gradle tracks only umt-api.yaml, not the paths/*.yaml files it references.
+tasks.named("openApiGenerate") {
+    inputs.dir("src/main/resources")
+}
+
 tasks.named("compileKotlin") {
     dependsOn("openApiGenerate")
 }

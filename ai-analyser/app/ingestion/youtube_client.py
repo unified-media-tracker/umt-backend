@@ -17,8 +17,7 @@ def fetch_posts(media_title: str, media_category: str | None = None, limit: int 
     Fetches recent videos mentioning media_title via the YouTube Data API - a lot of
     game/movie leaks and datamining surface here well before text press picks them up.
     The media_category is accepted for a uniform fetch_posts signature across ingestion sources,
-    but unused here - relevant creators exist across every media type (booktubers, music
-    channels included).
+    but unused here.
     Returns: [{source_name, source_url, source_reputation_score, text, published_at}, ...]
     """
     global _warned_missing_key

@@ -1,7 +1,6 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType
-import com.umt.api.generated.model.MediaItemRequest
 import com.umt.api.generated.model.MediaResponse
 import com.umt.api.generated.model.BookResponse
 import com.umt.api.generated.model.MediaSortOption

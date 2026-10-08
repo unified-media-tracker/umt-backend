@@ -51,16 +51,16 @@ def start_consumer():
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 
-            # Both optional - older/manual messages may not carry them. media_type=None
+            # Both optional - older/manual messages may not carry them. media_category=None
             # queries every ingestion source; known_release_date=None just means date-based
             # delay detection is skipped for this run, the same as before either field existed.
-            media_type = payload.get("media_type")
+            media_category = payload.get("media_category")
             known_release_date = payload.get("release_date")
 
             log.info("Received media.imported event for %s", media_item_id)
 
             run_pipeline_for_media_item(
-                media_item_id, title, media_type=media_type, known_release_date=known_release_date,
+                media_item_id, title, media_category=media_category, known_release_date=known_release_date,
             )
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except Exception:

@@ -1,6 +1,6 @@
 importMovieFromTmdb:
   post:
-    tags: [Media]
+    tags: [Movie]
     operationId: importMovieFromTmdb
     summary: "Import movie from TMDB"
     description: "Imports a movie from TMDB by its ID. Requires ADMIN role."
@@ -19,7 +19,7 @@ importMovieFromTmdb:
 
 importTvShowFromTmdb:
   post:
-    tags: [Media]
+    tags: [TvShow]
     operationId: importTvShowFromTmdb
     summary: "Import TV show from TMDB"
     description: "Imports a TV show from TMDB by its ID. Requires ADMIN role."
@@ -38,7 +38,7 @@ importTvShowFromTmdb:
 
 syncUpcomingMovies:
   post:
-    tags: [Media]
+    tags: [Movie]
     operationId: syncUpcomingMovies
     summary: "Sync upcoming movies from TMDB"
     description: "Queries TMDB's /movie/upcoming and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
@@ -54,7 +54,7 @@ syncUpcomingMovies:
 
 syncUpcomingTvSeries:
   post:
-    tags: [Media]
+    tags: [TvShow]
     operationId: syncUpcomingTvSeries
     summary: "Sync upcoming TV series from TMDB"
     description: "Queries TMDB's /discover/tv filtered to a future first_air_date and imports anything not already known. Requires ADMIN role. Also runs automatically once a day."
@@ -68,11 +68,11 @@ syncUpcomingTvSeries:
               items:
                 $ref: '#/components/schemas/MediaItemResponse'
 
-syncUpcomingAlbums:
+syncUpcomingMusic:
   post:
-    tags: [Media]
-    operationId: syncUpcomingAlbums
-    summary: "Sync upcoming albums from Metacritic + MusicBrainz"
+    tags: [Music]
+    operationId: syncUpcomingMusic
+    summary: "Sync upcoming music from Metacritic + MusicBrainz"
     description: "Scrapes Metacritic's upcoming album calendar for {artist, title, date}, resolves each against MusicBrainz, and imports confident matches. Requires ADMIN role. Also runs automatically once a day."
     responses:
       '200':
@@ -86,7 +86,7 @@ syncUpcomingAlbums:
 
 syncUpcomingGames:
   post:
-    tags: [Media]
+    tags: [Game]
     operationId: syncUpcomingGames
     summary: "Sync upcoming games from IGDB"
     description: "Queries IGDB for main-category games with a future first_release_date and imports them. Requires ADMIN role. Also runs automatically once a day."
@@ -102,7 +102,7 @@ syncUpcomingGames:
 
 syncUpcomingBooks:
   post:
-    tags: [Media]
+    tags: [Book]
     operationId: syncUpcomingBooks
     summary: "Sync upcoming books from Hardcover"
     description: "Queries Hardcover's GraphQL API for books with a future release_date and imports them, crediting authors. Requires ADMIN role. Also runs automatically once a day."
@@ -115,6 +115,102 @@ syncUpcomingBooks:
               type: array
               items:
                 $ref: '#/components/schemas/MediaItemResponse'
+
+listMedia:
+  get:
+    tags: [Media]
+    operationId: listMedia
+    summary: "List media items"
+    description: "Lists media items of one type, optionally filtered by release status and sorted. Public - no auth required."
+    parameters:
+      - name: mediaCategory
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/MediaCategory'
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ReleaseStatus'
+      - name: sort
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/MediaSortOption'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+
+getMediaById:
+  get:
+    tags: [Media]
+    operationId: getMediaById
+    summary: "Get a media item by id"
+    description: >-
+      Public - no auth required. mediaCategory is optional - pass it when the caller already knows
+      the type (e.g. a search scoped to one type) to look up that one table directly instead of
+      trying all five in turn. A mediaCategory that doesn't match the id's real type 404s, the same
+      as an unknown id - it does not fall back to searching the other tables.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: mediaCategory
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/MediaCategory'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaItemResponse'
+      '404':
+        description: Not found
+
+getSimilarMedia:
+  get:
+    tags: [Media]
+    operationId: getSimilarMedia
+    summary: "Get titles similar to this media item"
+    description: >-
+      Public - no auth required. "More like this", not personalized - backed by the source
+      catalog's own similarity signal (TMDb recommendations for movie/tv, IGDB similar_games
+      for game, Hardcover cached_similar_book_ids for book), filtered to whatever's already
+      in our own catalog. Music has no upstream source for this yet, so it's always empty.
+      Compare getRecommendations, which is user-personalized and type-agnostic. mediaCategory is
+      optional, same meaning and same 404-not-fallback behavior as on getMediaById.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: mediaCategory
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/MediaCategory'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MediaItemResponse'
+      '404':
+        description: Not found
 
 getRecommendations:
   post:
@@ -144,7 +240,7 @@ components:
       type: object
       required:
         - id
-        - mediaType
+        - mediaCategory
         - title
         - releaseDateStatus
         - popularityScore
@@ -155,8 +251,8 @@ components:
         id:
           type: string
           format: uuid
-        mediaType:
-          $ref: '#/components/schemas/MediaType'
+        mediaCategory:
+          $ref: '#/components/schemas/MediaCategory'
         title:
           type: string
         description:
@@ -201,6 +297,24 @@ components:
           items:
             $ref: '#/components/schemas/ContributorResponse'
           default: []
+        runtimeMinutes:
+          type: integer
+          format: int32
+          nullable: true
+          description: "Movies only, from the movie table."
+        previousReleaseDate:
+          type: string
+          format: date
+          nullable: true
+          description: "Not populated yet - release_status_history only keeps a free-text note of a date change, not a structured prior value."
+        latestDelayProbability:
+          type: number
+          nullable: true
+          description: "delay_probability from the most recent rumor_snapshot, if one has been computed."
+        latestConfidenceTrend:
+          allOf:
+            - $ref: '#/components/schemas/TrendDirection'
+          nullable: true
 
     ContributorResponse:
       type: object
@@ -243,7 +357,7 @@ components:
         name:
           type: string
 
-    MediaType:
+    MediaCategory:
       type: string
       enum:
         - MOVIE
@@ -270,6 +384,20 @@ components:
         - IGDB
         - MUSICBRAINZ
         - HARDCOVER
+
+    MediaSortOption:
+      type: string
+      enum:
+        - RELEASE_DATE
+        - DELAY_RISK
+        - POPULARITY
+
+    TrendDirection:
+      type: string
+      enum:
+        - RISING
+        - FALLING
+        - STABLE
 
     MediaItemRequest:
       type: object

@@ -17,7 +17,7 @@ class MediaEventPublisher(private val rabbitTemplate: RabbitTemplate) {
             MediaImportedEvent(
                 mediaItemId = id,
                 title = mediaItem.title,
-                mediaType = mediaItem.mediaType,
+                mediaCategory = mediaItem.mediaCategory,
                 releaseDate = mediaItem.releaseDate,
             ),
         )

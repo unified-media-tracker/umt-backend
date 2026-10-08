@@ -6,6 +6,7 @@ import com.umt.core.contribution.ContributorType
 import com.umt.core.contribution.Credit
 import com.umt.core.contribution.CreditRepository
 import com.umt.core.contribution.RoleType
+import com.umt.core.media.movie.Movie
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -24,13 +25,7 @@ class ContributorCreditServiceTest {
     private lateinit var creditRepository: CreditRepository
     private lateinit var service: ContributorCreditService
 
-    private val mediaItem = MediaItem(
-        id = UUID.randomUUID(),
-        mediaType = MediaType.MOVIE,
-        title = "Inception",
-        externalSource = ExternalSourceType.TMDB,
-        externalSourceId = "27205",
-    )
+    private val mediaItem = Movie(id = UUID.randomUUID(), title = "Inception", tmdbId = "27205")
 
     @BeforeEach
     fun setUp() {
@@ -63,7 +58,8 @@ class ContributorCreditServiceTest {
             val credit = slot<Credit>()
             verify(exactly = 1) { creditRepository.save(capture(credit)) }
             assertSame(existing, credit.captured.contributor)
-            assertSame(mediaItem, credit.captured.mediaItem)
+            assertEquals(mediaItem.id, credit.captured.mediaItemId)
+            assertEquals(MediaCategory.MOVIE, credit.captured.mediaCategory)
             assertEquals(RoleType.DIRECTOR, credit.captured.role)
         }
     }

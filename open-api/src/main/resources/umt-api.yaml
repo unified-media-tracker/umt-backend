@@ -5,11 +5,27 @@ info:
 
 tags:
   - name: Media
-    description: Operations related to media items (movies, games, etc.)
+    description: Cross-type browsing - search and list across every media type at once.
+  - name: Movie
+    description: Movie-specific admin import/sync (TMDB).
+  - name: TvShow
+    description: TV show-specific admin import/sync (TMDB).
+  - name: Game
+    description: Game-specific admin import/sync (IGDB).
+  - name: Book
+    description: Book-specific admin import/sync (Hardcover).
+  - name: Music
+    description: Album-specific admin import/sync (Metacritic + MusicBrainz).
   - name: User
     description: Operations related to users
 
 paths:
+  /api/core/media:
+    $ref: './paths/media-api.yaml#/listMedia'
+  /api/core/media/{id}:
+    $ref: './paths/media-api.yaml#/getMediaById'
+  /api/core/media/{id}/similar:
+    $ref: './paths/media-api.yaml#/getSimilarMedia'
   /api/core/media/import/tmdb/movie/{tmdbId}:
     $ref: './paths/media-api.yaml#/importMovieFromTmdb'
   /api/core/media/import/tmdb/tv/{tmdbId}:
@@ -18,8 +34,8 @@ paths:
     $ref: './paths/media-api.yaml#/syncUpcomingMovies'
   /api/core/media/sync/upcoming-tv-series:
     $ref: './paths/media-api.yaml#/syncUpcomingTvSeries'
-  /api/core/media/sync/upcoming-albums:
-    $ref: './paths/media-api.yaml#/syncUpcomingAlbums'
+  /api/core/media/sync/upcoming-music:
+    $ref: './paths/media-api.yaml#/syncUpcomingMusic'
   /api/core/media/sync/upcoming-games:
     $ref: './paths/media-api.yaml#/syncUpcomingGames'
   /api/core/media/sync/upcoming-books:

@@ -77,10 +77,10 @@ class TestFetchPosts:
         assert isinstance(posts[0]["published_at"], float)
 
     @patch("app.ingestion.google_news_client.feedparser.parse")
-    def test_media_type_is_accepted_but_does_not_change_the_query(self, parse):
+    def test_media_category_is_accepted_but_does_not_change_the_query(self, parse):
         parse.return_value = FakeFeed([])
 
-        fetch_posts("Grand Theft Auto VI", media_type="GAME")
-        fetch_posts("Grand Theft Auto VI", media_type="BOOK")
+        fetch_posts("Grand Theft Auto VI", media_category="GAME")
+        fetch_posts("Grand Theft Auto VI", media_category="BOOK")
 
         assert parse.call_args_list[0].args[0] == parse.call_args_list[1].args[0]

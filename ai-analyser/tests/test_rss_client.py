@@ -137,14 +137,14 @@ class TestMatchingEntries:
 
 class TestMediaTypeFiltering:
     """There's no point asking a gaming outlet about a book or a movie outlet about an
-    album - media_type narrows which feeds are even queried, down to the ones covering
+    album - media_category narrows which feeds are even queried, down to the ones covering
     that type of media."""
 
     @patch("app.ingestion.rss_client.feedparser.parse")
     def test_a_game_only_queries_the_three_gaming_feeds(self, parse):
         parse.return_value = FakeFeed([entry("Silksong news")])
 
-        fetch_posts("Silksong", media_type="GAME")
+        fetch_posts("Silksong", media_category="GAME")
 
         queried_urls = [call.args[0] for call in parse.call_args_list]
         assert len(queried_urls) == 3
@@ -154,7 +154,7 @@ class TestMediaTypeFiltering:
     def test_a_movie_only_queries_the_three_movie_tv_feeds(self, parse):
         parse.return_value = FakeFeed([entry("Some Movie news")])
 
-        fetch_posts("Some Movie", media_type="MOVIE")
+        fetch_posts("Some Movie", media_category="MOVIE")
 
         assert parse.call_count == 3
 
@@ -162,7 +162,7 @@ class TestMediaTypeFiltering:
     def test_a_book_only_queries_the_two_book_feeds(self, parse):
         parse.return_value = FakeFeed([entry("Some Novel news")])
 
-        fetch_posts("Some Novel", media_type="BOOK")
+        fetch_posts("Some Novel", media_category="BOOK")
 
         queried_urls = [call.args[0] for call in parse.call_args_list]
         assert len(queried_urls) == 2
@@ -172,16 +172,16 @@ class TestMediaTypeFiltering:
     def test_a_music_only_queries_the_three_music_feeds(self, parse):
         parse.return_value = FakeFeed([entry("Some Album news")])
 
-        fetch_posts("Some Album", media_type="MUSIC")
+        fetch_posts("Some Album", media_category="MUSIC")
 
         queried_urls = [call.args[0] for call in parse.call_args_list]
         assert len(queried_urls) == 3
         assert all(any(name in url for name in ("pitchfork", "billboard", "rollingstone")) for url in queried_urls)
 
     @patch("app.ingestion.rss_client.feedparser.parse")
-    def test_media_type_none_queries_every_feed(self, parse):
+    def test_media_category_none_queries_every_feed(self, parse):
         parse.return_value = FakeFeed([entry("Silksong news")])
 
-        fetch_posts("Silksong", media_type=None)
+        fetch_posts("Silksong", media_category=None)
 
         assert parse.call_count == 11

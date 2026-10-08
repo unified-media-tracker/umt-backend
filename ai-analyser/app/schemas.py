@@ -1,7 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum
 from pydantic import BaseModel, Field, field_validator
 from dataclasses import dataclass
+
+# A release date is never this far in the past or future - see normalize_extracted_release_date.
+MAX_PLAUSIBLE_PAST = timedelta(days=365)
+MAX_PLAUSIBLE_FUTURE = timedelta(days=365 * 6)
 
 
 # ============================================================
@@ -62,8 +66,14 @@ class PostEvaluation(BaseModel):
         if not isinstance(v, str) or not v.strip():
             return None
         try:
-            date.fromisoformat(v.strip())
+            parsed = date.fromisoformat(v.strip())
         except ValueError:
+            return None
+        # Guard against year-hallucination: the model invents a plausible year when the source
+        # gives a day/month with none (e.g. "In theaters October 2" -> "2023-10-02"). Treat an
+        # implausibly past or future result the same as an unparseable one - null it.
+        today = date.today()
+        if parsed < today - MAX_PLAUSIBLE_PAST or parsed > today + MAX_PLAUSIBLE_FUTURE:
             return None
         return v.strip()
 

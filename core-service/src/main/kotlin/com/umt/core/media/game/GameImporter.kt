@@ -34,7 +34,7 @@ class GameImporter(
 
         val saved = gameRepository.save(igdbGame.toGame())
         creditCompanies(saved, igdbGame.involvedCompanies)
-        mediaEventPublisher.publishIfUpcoming(saved)
+        mediaEventPublisher.requestAnalysisIfUpcoming(saved)
 
         return mediaResponseAssembler.assemble(saved)
     }

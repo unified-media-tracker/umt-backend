@@ -4,9 +4,16 @@ import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
 import com.umt.api.generated.model.BookResponse
 import com.umt.api.generated.model.GameResponse
 import com.umt.api.generated.model.MovieResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.api.generated.model.TvShowResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
+import com.umt.core.contribution.Contributor
+import com.umt.core.contribution.ContributorType
+import com.umt.core.contribution.Credit
+import com.umt.core.contribution.CreditRepository
+import com.umt.core.contribution.CreditedItem
+import com.umt.core.contribution.RoleType
 import com.umt.core.media.book.Book
 import com.umt.core.media.book.BookRepository
 import com.umt.core.media.book.hardcover.HardcoverClient
@@ -18,6 +25,7 @@ import com.umt.core.media.movie.MovieRepository
 import com.umt.core.media.movie.tmdb.TmdbClient
 import com.umt.core.media.music.Music
 import com.umt.core.media.music.MusicRepository
+import com.umt.core.media.music.similarity.ArtistSimilarityService
 import com.umt.core.media.tvshow.TvShow
 import com.umt.core.media.tvshow.TvShowRepository
 import io.mockk.every
@@ -46,9 +54,11 @@ class SimilarMediaServiceTest {
     private lateinit var gameRepository: GameRepository
     private lateinit var bookRepository: BookRepository
     private lateinit var musicRepository: MusicRepository
+    private lateinit var creditRepository: CreditRepository
     private lateinit var tmdbClient: TmdbClient
     private lateinit var igdbClient: IgdbClient
     private lateinit var hardcoverClient: HardcoverClient
+    private lateinit var artistSimilarityService: ArtistSimilarityService
     private lateinit var mediaResponseAssembler: MediaResponseAssembler
     private lateinit var mediaMapper: MediaMapper
     private lateinit var service: SimilarMediaService
@@ -60,19 +70,22 @@ class SimilarMediaServiceTest {
         gameRepository = mockk()
         bookRepository = mockk()
         musicRepository = mockk()
+        creditRepository = mockk()
         tmdbClient = mockk()
         igdbClient = mockk()
         hardcoverClient = mockk()
+        artistSimilarityService = mockk()
         mediaResponseAssembler = mockk()
         mediaMapper = mockk()
         service = SimilarMediaService(
-            movieRepository, tvShowRepository, gameRepository, bookRepository, musicRepository,
-            tmdbClient, igdbClient, hardcoverClient, mediaResponseAssembler, mediaMapper,
+            movieRepository, tvShowRepository, gameRepository, bookRepository, musicRepository, creditRepository,
+            tmdbClient, igdbClient, hardcoverClient, artistSimilarityService, mediaResponseAssembler, mediaMapper,
         )
         every { mediaResponseAssembler.assembleMovieList(any()) } answers { firstArg<List<Movie>>().map(::movieResponse) }
         every { mediaResponseAssembler.assembleTvShowList(any()) } answers { firstArg<List<TvShow>>().map(::tvShowResponse) }
         every { mediaResponseAssembler.assembleGameList(any()) } answers { firstArg<List<Game>>().map(::gameResponse) }
         every { mediaResponseAssembler.assembleBookList(any()) } answers { firstArg<List<Book>>().map(::bookResponse) }
+        every { mediaResponseAssembler.assembleMusicList(any()) } answers { firstArg<List<Music>>().map(::musicResponse) }
     }
 
     // Stand in for the real assembler: one response per item, titled after it, in the same
@@ -101,8 +114,14 @@ class SimilarMediaServiceTest {
         ratingCount = 0, externalSource = ApiExternalSourceType.HARDCOVER, externalSourceId = "x",
     )
 
+    private fun musicResponse(item: MediaItem) = MusicResponse(
+        id = item.id!!, mediaCategory = ApiMediaCategory.MUSIC, title = item.title,
+        releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
+        ratingCount = 0, externalSource = ApiExternalSourceType.MUSICBRAINZ, externalSourceId = "x",
+    )
+
     @Nested
-    inner class UnknownAndMusic {
+    inner class UnknownId {
         @Test
         fun `an unknown id throws NoSuchElementException`() {
             val id = UUID.randomUUID()
@@ -113,20 +132,6 @@ class SimilarMediaServiceTest {
             every { musicRepository.findById(id) } returns Optional.empty()
 
             assertThrows(NoSuchElementException::class.java) { service.getSimilarMedia(id) }
-        }
-
-        @Test
-        fun `a music item has no upstream source, so it's always an empty list, not an error`() {
-            val id = UUID.randomUUID()
-            every { movieRepository.findById(id) } returns Optional.empty()
-            every { tvShowRepository.findById(id) } returns Optional.empty()
-            every { gameRepository.findById(id) } returns Optional.empty()
-            every { bookRepository.findById(id) } returns Optional.empty()
-            every { musicRepository.findById(id) } returns Optional.of(Music(id = id, title = "In Rainbows", musicbrainzId = "mb-1"))
-
-            val result = service.getSimilarMedia(id)
-
-            assertTrue(result.isEmpty())
         }
     }
 
@@ -218,6 +223,124 @@ class SimilarMediaServiceTest {
             val result = service.getSimilarMedia(id)
 
             assertTrue(result.isEmpty())
+        }
+    }
+
+    @Nested
+    inner class MusicAlbums {
+        private val artist = "artist-src"
+        private val source = album("Source")
+
+        private fun album(title: String) = Music(id = UUID.randomUUID(), title = title, musicbrainzId = "mb-$title")
+
+        private fun credit(albumId: UUID, artistMbid: String, role: RoleType = RoleType.ARTIST, source: ExternalSourceType = ExternalSourceType.MUSICBRAINZ) =
+            Credit(
+                mediaItemId = albumId, mediaCategory = MediaCategory.MUSIC, role = role,
+                contributor = Contributor(
+                    id = UUID.randomUUID(), contributorType = ContributorType.PERSON, name = "Artist $artistMbid",
+                    externalSource = source, externalSourceId = artistMbid,
+                ),
+            )
+
+        private fun credited(artistMbid: String, albumId: UUID) = object : CreditedItem {
+            override val externalId = artistMbid
+            override val mediaItemId = albumId
+        }
+
+        private fun findCredited(vararg artistMbids: String) = creditRepository.findCreditedItems(
+            MediaCategory.MUSIC, RoleType.ARTIST, ExternalSourceType.MUSICBRAINZ, artistMbids.toList(),
+        )
+
+        @BeforeEach
+        fun setUp() {
+            every { movieRepository.findById(source.id!!) } returns Optional.empty()
+            every { tvShowRepository.findById(source.id!!) } returns Optional.empty()
+            every { gameRepository.findById(source.id!!) } returns Optional.empty()
+            every { bookRepository.findById(source.id!!) } returns Optional.empty()
+            every { musicRepository.findById(source.id!!) } returns Optional.of(source)
+            every { creditRepository.findByMediaItemId(source.id!!) } returns listOf(credit(source.id!!, artist))
+        }
+
+        @Test
+        fun `resolves the similar artists to albums in our catalog, best-matching artist first`() {
+            val byA = album("By A")
+            val firstByB = album("First by B")
+            val secondByB = album("Second by B")
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns listOf("b", "a")
+            every { findCredited("b", "a") } returns listOf(credited("a", byA.id!!), credited("b", firstByB.id!!), credited("b", secondByB.id!!))
+            // Repo returns them in the "wrong" order on purpose - order must come from the similar artists, not this.
+            every { musicRepository.findByIdIn(listOf(firstByB.id!!, secondByB.id!!, byA.id!!)) } returns listOf(byA, secondByB, firstByB)
+
+            val result = service.getSimilarMedia(source.id!!)
+
+            assertEquals(listOf("First by B", "Second by B", "By A"), result.map { it.title })
+        }
+
+        @Test
+        fun `works the same when the mediaCategory is given`() {
+            val byA = album("By A")
+            every { mediaMapper.toDomainMediaCategory(ApiMediaCategory.MUSIC) } returns MediaCategory.MUSIC
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns listOf("a")
+            every { findCredited("a") } returns listOf(credited("a", byA.id!!))
+            every { musicRepository.findByIdIn(listOf(byA.id!!)) } returns listOf(byA)
+
+            val result = service.getSimilarMedia(source.id!!, ApiMediaCategory.MUSIC)
+
+            assertEquals(listOf("By A"), result.map { it.title })
+        }
+
+        @Test
+        fun `never returns the album itself or an album by its own artist`() {
+            val byA = album("By A")
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns listOf(artist, "a")
+            every { findCredited("a") } returns listOf(credited("a", source.id!!), credited("a", byA.id!!))
+            every { musicRepository.findByIdIn(listOf(byA.id!!)) } returns listOf(byA)
+
+            val result = service.getSimilarMedia(source.id!!)
+
+            assertEquals(listOf("By A"), result.map { it.title })
+        }
+
+        @Test
+        fun `caps results at SIMILAR_MEDIA_LIMIT even when every similar artist has an album`() {
+            val albums = (1..15).map { album("Album $it") }
+            val artists = albums.indices.map { "artist-$it" }
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns artists
+            every { creditRepository.findCreditedItems(MediaCategory.MUSIC, RoleType.ARTIST, ExternalSourceType.MUSICBRAINZ, artists) } returns
+                albums.mapIndexed { i, a -> credited(artists[i], a.id!!) }
+            every { musicRepository.findByIdIn(albums.map { it.id!! }) } returns albums
+
+            val result = service.getSimilarMedia(source.id!!)
+
+            assertEquals(SimilarMediaService.SIMILAR_MEDIA_LIMIT, result.size)
+        }
+
+        @Test
+        fun `similar artists with no album in our catalog is an empty list, not an error`() {
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns listOf("a")
+            every { findCredited("a") } returns emptyList()
+            every { musicRepository.findByIdIn(emptyList()) } returns emptyList()
+
+            assertTrue(service.getSimilarMedia(source.id!!).isEmpty())
+        }
+
+        @Test
+        fun `an artist with no similar artists is an empty list without a catalog query`() {
+            every { artistSimilarityService.similarArtistMbids(artist, any()) } returns emptyList()
+
+            assertTrue(service.getSimilarMedia(source.id!!).isEmpty())
+            verify(exactly = 0) { creditRepository.findCreditedItems(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `an album with no MusicBrainz artist credit has nothing to look up`() {
+            every { creditRepository.findByMediaItemId(source.id!!) } returns listOf(
+                credit(source.id!!, "someone", role = RoleType.WRITER),
+                credit(source.id!!, "someone-else", source = ExternalSourceType.TMDB),
+            )
+
+            assertTrue(service.getSimilarMedia(source.id!!).isEmpty())
+            verify(exactly = 0) { artistSimilarityService.similarArtistMbids(any(), any()) }
         }
     }
 

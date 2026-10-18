@@ -4,6 +4,7 @@ import com.umt.api.generated.model.MediaItemResponse
 import com.umt.api.generated.model.MediaSortOption
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
+import com.umt.core.media.MediaSpecifications.listing
 import com.umt.core.media.book.BookRepository
 import com.umt.core.media.game.GameRepository
 import com.umt.core.media.music.MusicRepository
@@ -25,24 +26,29 @@ class MediaServiceImpl(
     private val mediaMapper: MediaMapper,
 ) : MediaService {
 
-    override fun listMedia(mediaCategory: ApiMediaCategory, status: ApiReleaseStatus?, sort: MediaSortOption?): List<MediaItemResponse> {
+    override fun listMedia(
+        mediaCategory: ApiMediaCategory,
+        status: ApiReleaseStatus?,
+        sort: MediaSortOption?,
+        releaseDateFrom: LocalDate?,
+    ): List<MediaItemResponse> {
         val domainStatus = status?.let { mediaMapper.toDomainReleaseStatus(it) }
 
         val responses = when (mediaMapper.toDomainMediaCategory(mediaCategory)) {
             MediaCategory.MOVIE -> mediaResponseAssembler.assembleMovieList(
-                domainStatus?.let { movieRepository.findByReleaseDateStatus(it) } ?: movieRepository.findAll()
+                movieRepository.findAll(listing(domainStatus, releaseDateFrom))
             )
             MediaCategory.TV_SHOW -> mediaResponseAssembler.assembleTvShowList(
-                domainStatus?.let { tvShowRepository.findByReleaseDateStatus(it) } ?: tvShowRepository.findAll()
+                tvShowRepository.findAll(listing(domainStatus, releaseDateFrom))
             )
             MediaCategory.GAME -> mediaResponseAssembler.assembleGameList(
-                domainStatus?.let { gameRepository.findByReleaseDateStatus(it) } ?: gameRepository.findAll()
+                gameRepository.findAll(listing(domainStatus, releaseDateFrom))
             )
             MediaCategory.BOOK -> mediaResponseAssembler.assembleBookList(
-                domainStatus?.let { bookRepository.findByReleaseDateStatus(it) } ?: bookRepository.findAll()
+                bookRepository.findAll(listing(domainStatus, releaseDateFrom))
             )
             MediaCategory.MUSIC -> mediaResponseAssembler.assembleMusicList(
-                domainStatus?.let { musicRepository.findByReleaseDateStatus(it) } ?: musicRepository.findAll()
+                musicRepository.findAll(listing(domainStatus, releaseDateFrom))
             )
         }
 

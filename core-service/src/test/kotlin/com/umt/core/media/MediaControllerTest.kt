@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -46,22 +47,38 @@ class MediaControllerTest {
     )
 
     @Test
-    fun `listMedia delegates to the service with all three query params`() {
+    fun `listMedia delegates to the service with all four query params`() {
         val results = listOf(response("Meridian Line"))
-        every { mediaService.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK) } returns results
+        val from = LocalDate.of(2026, 9, 1)
+        every {
+            mediaService.listMedia(
+                MediaCategory.MOVIE,
+                ReleaseStatus.CONFIRMED,
+                MediaSortOption.DELAY_RISK,
+                from
+            )
+        } returns results
 
-        val result = controller.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK)
+        val result =
+            controller.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK, from)
 
         assertEquals(HttpStatus.OK, result.statusCode)
         assertEquals(results, result.body)
-        verify(exactly = 1) { mediaService.listMedia(MediaCategory.MOVIE, ReleaseStatus.CONFIRMED, MediaSortOption.DELAY_RISK) }
+        verify(exactly = 1) {
+            mediaService.listMedia(
+                MediaCategory.MOVIE,
+                ReleaseStatus.CONFIRMED,
+                MediaSortOption.DELAY_RISK,
+                from
+            )
+        }
     }
 
     @Test
-    fun `listMedia works with status and sort both omitted`() {
-        every { mediaService.listMedia(MediaCategory.MOVIE, null, null) } returns emptyList()
+    fun `listMedia works with status, sort and releaseDateFrom all omitted`() {
+        every { mediaService.listMedia(MediaCategory.MOVIE, null, null, null) } returns emptyList()
 
-        val result = controller.listMedia(MediaCategory.MOVIE, null, null)
+        val result = controller.listMedia(MediaCategory.MOVIE, null, null, null)
 
         assertEquals(emptyList<MediaItemResponse>(), result.body)
     }

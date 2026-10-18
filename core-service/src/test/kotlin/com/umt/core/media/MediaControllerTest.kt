@@ -1,7 +1,6 @@
 package com.umt.core.media
 
 import com.umt.api.generated.model.ExternalSourceType
-import com.umt.api.generated.model.MediaItemRequest
 import com.umt.api.generated.model.MediaResponse
 import com.umt.api.generated.model.BookResponse
 import com.umt.api.generated.model.MediaSortOption
@@ -132,17 +131,5 @@ class MediaControllerTest {
 
         assertEquals(results, result.body)
         verify(exactly = 1) { similarMediaService.getSimilarMedia(id, MediaCategory.GAME) }
-    }
-
-    @Test
-    fun `getRecommendations delegates to the service with the request's userId`() {
-        val results = listOf(response("Meridian Line"))
-        every { mediaService.getUserRecommendations(userId = 42L) } returns results
-
-        val result = controller.getRecommendations(MediaItemRequest(userId = 42L))
-
-        assertEquals(HttpStatus.OK, result.statusCode)
-        assertEquals(results, result.body)
-        verify(exactly = 1) { mediaService.getUserRecommendations(userId = 42L) }
     }
 }

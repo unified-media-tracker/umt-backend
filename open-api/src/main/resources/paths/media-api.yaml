@@ -105,28 +105,6 @@ getSimilarMedia:
       '404':
         description: Not found
 
-getRecommendations:
-  post:
-    tags: [ Media ]
-    operationId: getRecommendations
-    summary: "Get recommended media content"
-    description: "Returns a list of recommended movies based on"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/MediaItemRequest'
-    responses:
-      '200':
-        description: OK
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/MediaResponse'
-
 components:
   schemas:
     MediaResponse:

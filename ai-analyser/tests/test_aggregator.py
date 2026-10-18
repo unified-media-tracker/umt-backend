@@ -47,13 +47,13 @@ class TestFetchAllPosts:
     @patch("app.ingestion.aggregator.youtube_client")
     @patch("app.ingestion.aggregator.rss_client")
     @patch("app.ingestion.aggregator.google_news_client")
-    def test_media_type_is_passed_to_every_source(self, google_news, rss, youtube):
+    def test_media_category_is_passed_to_every_source(self, google_news, rss, youtube):
         google_news.fetch_posts.return_value = []
         rss.fetch_posts.return_value = []
         youtube.fetch_posts.return_value = []
 
-        fetch_all_posts("Silksong", media_type="GAME")
+        fetch_all_posts("Silksong", media_category="GAME")
 
-        google_news.fetch_posts.assert_called_once_with("Silksong", media_type="GAME")
-        rss.fetch_posts.assert_called_once_with("Silksong", media_type="GAME")
-        youtube.fetch_posts.assert_called_once_with("Silksong", media_type="GAME")
+        google_news.fetch_posts.assert_called_once_with("Silksong", media_category="GAME")
+        rss.fetch_posts.assert_called_once_with("Silksong", media_category="GAME")
+        youtube.fetch_posts.assert_called_once_with("Silksong", media_category="GAME")

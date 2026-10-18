@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 def run_pipeline_for_media_item(
-        media_item_id: UUID, media_title: str, media_type: str | None = None,
+        media_item_id: UUID, media_title: str, media_category: str | None = None,
         known_release_date: str | None = None, publish: bool = True,
 ) -> None:
     session = SessionLocal()
@@ -27,7 +27,7 @@ def run_pipeline_for_media_item(
 
         parsed_known_date = date.fromisoformat(known_release_date) if known_release_date else None
 
-        raw_posts = fetch_all_posts(media_title, media_type=media_type)
+        raw_posts = fetch_all_posts(media_title, media_category=media_category)
         delay_probability, signals = process_raw_posts(
             session, media_item_id, media_title, raw_posts, parsed_known_date,
         )
@@ -46,7 +46,7 @@ def run_pipeline_for_media_item(
         if publish:
             publish_rumor_computed(media_item_id=media_item_id, delay_probability=delay_probability,
                                    aggregate_sentiment_score=avg_sentiment, top_source_name=top_source,
-                                   confidence_trend=trend)
+                                   media_category=media_category, confidence_trend=trend)
         else:
             log.info(
                 "[MOCK] Results for %s: Delay=%s%%, Sentiment=%s, Top Source=%s, Trend=%s",

@@ -6,6 +6,6 @@ import java.util.UUID
 data class MediaImportedEvent(
     val mediaItemId: UUID,
     val title: String,
-    val mediaType: MediaType,
+    val mediaCategory: MediaCategory,
     val releaseDate: LocalDate?,
 )

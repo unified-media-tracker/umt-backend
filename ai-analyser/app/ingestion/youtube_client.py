@@ -12,11 +12,11 @@ SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _warned_missing_key = False
 
 
-def fetch_posts(media_title: str, media_type: str | None = None, limit: int = 5):
+def fetch_posts(media_title: str, media_category: str | None = None, limit: int = 5):
     """
     Fetches recent videos mentioning media_title via the YouTube Data API - a lot of
     game/movie leaks and datamining surface here well before text press picks them up.
-    The media_type is accepted for a uniform fetch_posts signature across ingestion sources,
+    The media_category is accepted for a uniform fetch_posts signature across ingestion sources,
     but unused here - relevant creators exist across every media type (booktubers, music
     channels included).
     Returns: [{source_name, source_url, source_reputation_score, text, published_at}, ...]

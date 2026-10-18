@@ -1,5 +1,6 @@
 package com.umt.core.media
 
+import com.umt.core.media.game.Game
 import com.umt.core.rumor.RabbitMQConfig
 import io.mockk.mockk
 import io.mockk.slot
@@ -32,17 +33,14 @@ class MediaEventPublisherTest {
         id: UUID? = UUID.randomUUID(),
         status: ReleaseStatus = ReleaseStatus.ANNOUNCED,
         title: String = "Silksong",
-        mediaType: MediaType = MediaType.GAME,
         releaseDate: LocalDate? = LocalDate.of(2026, 12, 1),
-    ) = MediaItem(
+    ) = Game(
         id = id,
-        mediaType = mediaType,
         title = title,
         releaseDate = releaseDate,
         releaseDateStatus = status,
         popularityScore = BigDecimal.ONE,
-        externalSource = ExternalSourceType.IGDB,
-        externalSourceId = "1030",
+        igdbId = "1030",
     )
 
     @Test
@@ -50,7 +48,7 @@ class MediaEventPublisherTest {
         val id = UUID.randomUUID()
 
         publisher.publishIfUpcoming(
-            mediaItem(id = id, title = "Silksong", mediaType = MediaType.GAME, releaseDate = LocalDate.of(2026, 12, 1)),
+            mediaItem(id = id, title = "Silksong", releaseDate = LocalDate.of(2026, 12, 1)),
         )
 
         val payload = slot<MediaImportedEvent>()
@@ -63,7 +61,7 @@ class MediaEventPublisherTest {
         }
         assertEquals(id, payload.captured.mediaItemId)
         assertEquals("Silksong", payload.captured.title)
-        assertEquals(MediaType.GAME, payload.captured.mediaType)
+        assertEquals(MediaCategory.GAME, payload.captured.mediaCategory)
         assertEquals(LocalDate.of(2026, 12, 1), payload.captured.releaseDate)
     }
 

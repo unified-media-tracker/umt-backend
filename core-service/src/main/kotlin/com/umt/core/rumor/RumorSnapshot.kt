@@ -1,6 +1,6 @@
 package com.umt.core.rumor
 
-import com.umt.core.media.MediaItem
+import com.umt.core.media.MediaCategory
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -10,6 +10,9 @@ import java.util.UUID
 
 enum class TrendDirection { RISING, FALLING, STABLE }
 
+/**
+ * Loosely referenced (mediaItemId + mediaCategory, no FK) - see Credit's class doc for why.
+ */
 @Entity
 @Table(name = RumorSnapshot.TABLE_NAME)
 class RumorSnapshot(
@@ -18,9 +21,13 @@ class RumorSnapshot(
     @field:Column(name = ID_COLUMN)
     var id: UUID? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
-    var mediaItem: MediaItem,
+    @field:Column(name = MEDIA_ITEM_ID_COLUMN, nullable = false)
+    var mediaItemId: UUID,
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @field:Column(name = MEDIA_CATEGORY_COLUMN, nullable = false)
+    var mediaCategory: MediaCategory,
 
     @field:Column(name = DELAY_PROBABILITY_COLUMN, nullable = false, precision = 5, scale = 2)
     var delayProbability: BigDecimal,
@@ -42,6 +49,7 @@ class RumorSnapshot(
         const val TABLE_NAME = "rumor_snapshot"
         const val ID_COLUMN = "id"
         const val MEDIA_ITEM_ID_COLUMN = "media_item_id"
+        const val MEDIA_CATEGORY_COLUMN = "media_category"
         const val DELAY_PROBABILITY_COLUMN = "delay_probability"
         const val AGGREGATE_SENTIMENT_SCORE_COLUMN = "aggregate_sentiment_score"
         const val CONFIDENCE_TREND_COLUMN = "confidence_trend"
@@ -49,4 +57,3 @@ class RumorSnapshot(
         const val COMPUTED_AT_COLUMN = "computed_at"
     }
 }
-

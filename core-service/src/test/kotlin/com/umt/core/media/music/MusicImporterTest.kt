@@ -1,7 +1,7 @@
 package com.umt.core.media.music
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MusicResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.contribution.RoleType
@@ -38,7 +38,7 @@ class MusicImporterTest {
 
     private val candidate = UpcomingMusicCandidate("Radiohead", "The Bends", LocalDate.of(2027, 1, 1))
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = MusicResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.MUSIC,
         title = "assembled",

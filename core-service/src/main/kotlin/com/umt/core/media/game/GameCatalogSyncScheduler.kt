@@ -1,6 +1,6 @@
 package com.umt.core.media.game
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.GameResponse
 import com.umt.core.media.game.igdb.IgdbClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -14,10 +14,10 @@ class GameCatalogSyncScheduler(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "0 30 4 * * *")
-    fun syncUpcomingGames(): List<MediaItemResponse> {
+    fun syncUpcomingGames(): List<GameResponse> {
         log.info("Starting scheduled upcoming-games sync")
         val games = igdbClient.fetchUpcomingGames()
-        val results = mutableListOf<MediaItemResponse>()
+        val results = mutableListOf<GameResponse>()
 
         for (game in games) {
             try {

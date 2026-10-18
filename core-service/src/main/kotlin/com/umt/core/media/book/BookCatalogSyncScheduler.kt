@@ -1,6 +1,6 @@
 package com.umt.core.media.book
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.BookResponse
 import com.umt.core.media.book.hardcover.HardcoverClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -14,10 +14,10 @@ class BookCatalogSyncScheduler(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "0 30 5 * * *")
-    fun syncUpcomingBooks(): List<MediaItemResponse> {
+    fun syncUpcomingBooks(): List<BookResponse> {
         log.info("Starting scheduled upcoming-books sync")
         val books = hardcoverClient.fetchUpcomingBooks()
-        val results = mutableListOf<MediaItemResponse>()
+        val results = mutableListOf<BookResponse>()
 
         for (book in books) {
             try {

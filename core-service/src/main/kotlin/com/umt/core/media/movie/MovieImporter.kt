@@ -1,6 +1,6 @@
 package com.umt.core.media.movie
 
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.MovieResponse
 import com.umt.core.contribution.RoleType
 import com.umt.core.media.ContributorCreditService
 import com.umt.core.media.ExternalSourceType
@@ -35,7 +35,7 @@ class MovieImporter(
     // Fetching full details even for an already-known movie is deliberate: it's the only way
     // to notice a studio has pushed the release date since yesterday's sync.
     @Transactional
-    fun importMovie(tmdbId: Long): MediaItemResponse {
+    fun importMovie(tmdbId: Long): MovieResponse {
         val existing = movieRepository.findByTmdbId(tmdbId.toString())
         val tmdbMovie = tmdbClient.fetchMovie(tmdbId)
 
@@ -65,7 +65,7 @@ class MovieImporter(
             }
     }
 
-    private fun updateExisting(existing: Movie, incomingDate: java.time.LocalDate?): MediaItemResponse =
+    private fun updateExisting(existing: Movie, incomingDate: java.time.LocalDate?): MovieResponse =
         mediaResponseAssembler.assemble(releaseDateSyncService.updateIfChanged(existing, incomingDate, "TMDb"))
 
     private fun resolveGenres(names: List<String>): MutableSet<Genre> =

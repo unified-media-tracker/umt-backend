@@ -1,7 +1,7 @@
 package com.umt.core.media.tvshow
 
 import com.umt.api.generated.model.ExternalSourceType as ApiExternalSourceType
-import com.umt.api.generated.model.MediaItemResponse
+import com.umt.api.generated.model.TvShowResponse
 import com.umt.api.generated.model.MediaCategory as ApiMediaCategory
 import com.umt.api.generated.model.ReleaseStatus as ApiReleaseStatus
 import com.umt.core.contribution.RoleType
@@ -37,7 +37,7 @@ class TvShowImporterTest {
     private lateinit var contributorCreditService: ContributorCreditService
     private lateinit var importer: TvShowImporter
 
-    private val fixedResponse = MediaItemResponse(
+    private val fixedResponse = TvShowResponse(
         id = UUID.randomUUID(),
         mediaCategory = ApiMediaCategory.TV_SHOW,
         title = "assembled",

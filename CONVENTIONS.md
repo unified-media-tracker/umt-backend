@@ -20,3 +20,30 @@ _Example: docs: update API swagger documentation_
 
 **test:** (Testing) – Adding or updating tests.
 _Example: test: add unit tests for subscription service_
+
+
+## Issue Creation
+
+Issues (backlog) are created using the following convention:
+
+**As:** \<user role>
+
+**I want:** \<task explanation>
+
+**So that:** \<a resulting effort>
+
+**(Optional) Requirements:**
+
+\<Req. 1>
+
+\<Req. 2>
+
+...
+
+_Example:_
+
+**As:** a user
+
+**I want:** to have an ability to get to platforms where I can explore tracked content
+
+**So that:** I can actually view the content

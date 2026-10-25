@@ -45,7 +45,7 @@ class TvShow(
     franchiseId = franchiseId,
 ) {
 
-    override var mediaCategory: MediaCategory? = MediaCategory.TV_SHOW
+    final override var mediaCategory: MediaCategory? = MediaCategory.TV_SHOW
 
     @ManyToMany
     @JoinTable(

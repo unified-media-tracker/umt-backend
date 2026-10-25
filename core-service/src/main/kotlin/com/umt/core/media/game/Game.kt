@@ -41,7 +41,7 @@ class Game(
     franchiseId = franchiseId,
 ) {
 
-    override var mediaCategory: MediaCategory? = MediaCategory.GAME
+    final override var mediaCategory: MediaCategory? = MediaCategory.GAME
 
     @ManyToMany
     @JoinTable(

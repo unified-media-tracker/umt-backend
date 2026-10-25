@@ -41,7 +41,7 @@ class Music(
     franchiseId = franchiseId,
 ) {
 
-    override var mediaCategory: MediaCategory? = MediaCategory.MUSIC
+    final override var mediaCategory: MediaCategory? = MediaCategory.MUSIC
 
     @ManyToMany
     @JoinTable(

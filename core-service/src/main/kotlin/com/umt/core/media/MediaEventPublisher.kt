@@ -17,7 +17,7 @@ class MediaEventPublisher(private val rabbitTemplate: RabbitTemplate) {
             MediaAnalysisRequestedEvent(
                 mediaItemId = id,
                 title = mediaItem.title,
-                mediaCategory = mediaItem.mediaCategory,
+                mediaCategory = mediaItem.mediaCategory!!,
                 releaseDate = mediaItem.releaseDate,
             ),
         )

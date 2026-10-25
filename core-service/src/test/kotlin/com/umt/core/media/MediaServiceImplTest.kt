@@ -71,7 +71,7 @@ class MediaServiceImplTest {
         )
     }
 
-    private fun movie(id: UUID = UUID.randomUUID()) = Movie(id = id, title = "t", tmdbId = id.toString())
+    private fun movie(id: UUID = UUID.randomUUID()) = Movie(title = "t", tmdbId = id.toString()).apply { this.id = id }
 
     private fun response(id: UUID, releaseDate: LocalDate? = null, popularityScore: BigDecimal = BigDecimal.ZERO, delayProbability: BigDecimal? = null) =
         fixedResponse.copy(id = id, releaseDate = releaseDate, popularityScore = popularityScore, latestDelayProbability = delayProbability)
@@ -212,7 +212,7 @@ class MediaServiceImplTest {
         @Test
         fun `an id not found until the last table tried still resolves`() {
             val id = UUID.randomUUID()
-            val music = Music(id = id, title = "In Rainbows", musicbrainzId = "xyz")
+            val music = Music(title = "In Rainbows", musicbrainzId = "xyz").apply { this.id = id }
             every { movieRepository.findById(id) } returns Optional.empty()
             every { tvShowRepository.findById(id) } returns Optional.empty()
             every { gameRepository.findById(id) } returns Optional.empty()

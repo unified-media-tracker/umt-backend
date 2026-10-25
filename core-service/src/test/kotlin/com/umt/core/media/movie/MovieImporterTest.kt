@@ -70,7 +70,7 @@ class MovieImporterTest {
         every { contributorCreditService.credit(any<Movie>(), any(), any(), any(), any(), any()) } returns Unit
     }
 
-    private fun existingMovie(tmdbId: String) = Movie(id = UUID.randomUUID(), title = "Old title", tmdbId = tmdbId)
+    private fun existingMovie(tmdbId: String) = Movie(title = "Old title", tmdbId = tmdbId).apply { this.id = UUID.randomUUID() }
 
     @Test
     fun `a brand-new movie is saved with its genres and runtime, and its director+writers credited`() {

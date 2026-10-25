@@ -21,11 +21,14 @@ import java.util.UUID
 class MediaResponseMappingTest {
 
     private val extras = ResponseExtras(emptyList(), BigDecimal.valueOf(9), ApiTrendDirection.FALLING)
-    private val id = UUID.randomUUID()
+    private val mediaId = UUID.randomUUID()
 
     @Test
     fun `a movie maps to a MovieResponse with its runtime and TMDB as the source`() {
-        val response = MovieMapperImpl().toResponse(Movie(id = id, title = "Inception", tmdbId = "27205", runtimeMinutes = 148), extras)
+        val response = MovieMapperImpl().toResponse(
+            Movie(title = "Inception", tmdbId = "27205", runtimeMinutes = 148).apply { this.id = mediaId },
+            extras
+        )
 
         assertEquals(ApiMediaCategory.MOVIE, response.mediaCategory)
         assertEquals(ApiExternalSourceType.TMDB, response.externalSource)
@@ -37,7 +40,10 @@ class MediaResponseMappingTest {
 
     @Test
     fun `a tv show maps with TMDB as the source`() {
-        val response = TvShowMapperImpl().toResponse(TvShow(id = id, title = "Severance", tmdbId = "95396"), extras)
+        val response = TvShowMapperImpl().toResponse(
+            TvShow(title = "Severance", tmdbId = "95396").apply { this.id = mediaId },
+            extras
+        )
 
         assertEquals(ApiMediaCategory.TV_SHOW, response.mediaCategory)
         assertEquals(ApiExternalSourceType.TMDB, response.externalSource)
@@ -47,7 +53,10 @@ class MediaResponseMappingTest {
 
     @Test
     fun `a game maps with IGDB as the source`() {
-        val response = GameMapperImpl().toResponse(Game(id = id, title = "Half-Life 3", igdbId = "1942"), extras)
+        val response = GameMapperImpl().toResponse(
+            Game(title = "Half-Life 3", igdbId = "1942").apply { this.id = mediaId },
+            extras
+        )
 
         assertEquals(ApiMediaCategory.GAME, response.mediaCategory)
         assertEquals(ApiExternalSourceType.IGDB, response.externalSource)
@@ -57,7 +66,10 @@ class MediaResponseMappingTest {
 
     @Test
     fun `a book maps with Hardcover as the source`() {
-        val response = BookMapperImpl().toResponse(Book(id = id, title = "Project Hail Mary", hardcoverId = "235"), extras)
+        val response = BookMapperImpl().toResponse(
+            Book(title = "Project Hail Mary", hardcoverId = "235").apply { this.id = mediaId },
+            extras
+        )
 
         assertEquals(ApiMediaCategory.BOOK, response.mediaCategory)
         assertEquals(ApiExternalSourceType.HARDCOVER, response.externalSource)
@@ -67,7 +79,10 @@ class MediaResponseMappingTest {
 
     @Test
     fun `a music release maps with MusicBrainz as the source`() {
-        val response = MusicMapperImpl().toResponse(Music(id = id, title = "In Rainbows", musicbrainzId = "mb-1"), extras)
+        val response = MusicMapperImpl().toResponse(
+            Music(title = "In Rainbows", musicbrainzId = "mb-1").apply { this.id = mediaId },
+            extras
+        )
 
         assertEquals(ApiMediaCategory.MUSIC, response.mediaCategory)
         assertEquals(ApiExternalSourceType.MUSICBRAINZ, response.externalSource)

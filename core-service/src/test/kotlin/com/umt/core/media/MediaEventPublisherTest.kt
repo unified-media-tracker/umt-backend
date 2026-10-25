@@ -35,13 +35,12 @@ class MediaEventPublisherTest {
         title: String = "Silksong",
         releaseDate: LocalDate? = LocalDate.of(2026, 12, 1),
     ) = Game(
-        id = id,
         title = title,
         releaseDate = releaseDate,
         releaseDateStatus = status,
         popularityScore = BigDecimal.ONE,
         igdbId = "1030",
-    )
+    ).apply { this.id = id }
 
     @Test
     fun `publishes an upcoming item to the events exchange with the media-analysis-requested routing key`() {

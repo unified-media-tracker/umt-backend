@@ -32,6 +32,7 @@ class Movie(
     var runtimeMinutes: Int? = null,
 
 ) : MediaItem(
+    mediaCategory = MediaCategory.MOVIE,
     title = title,
     description = description,
     coverImageUrl = coverImageUrl,
@@ -43,8 +44,6 @@ class Movie(
     ratingCount = ratingCount,
     franchiseId = franchiseId,
 ) {
-
-    final override var mediaCategory: MediaCategory? = MediaCategory.MOVIE
 
     @ManyToMany
     @JoinTable(

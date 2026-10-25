@@ -40,6 +40,8 @@ enum class ExternalSourceType { TMDB, IGDB, MUSICBRAINZ, HARDCOVER }
 @DiscriminatorColumn(name = MediaItem.DISCRIMINATOR_COLUMN)
 abstract class MediaItem (
 
+    mediaCategory: MediaCategory,
+
     @field:Column(name = TITLE_COLUMN, nullable = false, length = 255)
     var title: String,
 
@@ -81,7 +83,7 @@ abstract class MediaItem (
 
     @field:Enumerated(EnumType.STRING)
     @field:Column(name = DISCRIMINATOR_COLUMN, insertable = false, updatable = false)
-    var mediaCategory: MediaCategory? = null
+    var mediaCategory: MediaCategory = mediaCategory
         protected set
 
     @CreationTimestamp

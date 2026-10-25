@@ -29,6 +29,7 @@ class Book(
     var hardcoverId: String,
 
 ) : MediaItem(
+    mediaCategory = MediaCategory.BOOK,
     title = title,
     description = description,
     coverImageUrl = coverImageUrl,
@@ -40,8 +41,6 @@ class Book(
     ratingCount = ratingCount,
     franchiseId = franchiseId,
 ) {
-
-    final override var mediaCategory: MediaCategory? = MediaCategory.BOOK
 
     @ManyToMany
     @JoinTable(

@@ -93,7 +93,7 @@ class ReleaseDateSyncService(
         releaseStatusHistoryRepository.save(
             ReleaseStatusHistory(
                 mediaItemId = item.id!!,
-                mediaCategory = item.mediaCategory!!,
+                mediaCategory = item.mediaCategory,
                 status = item.releaseDateStatus,
                 changedAt = Instant.now(),
                 sourceNote = note,

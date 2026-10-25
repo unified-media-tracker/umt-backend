@@ -33,6 +33,7 @@ class TvShow(
     var tmdbId: String,
 
 ) : MediaItem(
+    mediaCategory = MediaCategory.TV_SHOW,
     title = title,
     description = description,
     coverImageUrl = coverImageUrl,
@@ -44,8 +45,6 @@ class TvShow(
     ratingCount = ratingCount,
     franchiseId = franchiseId,
 ) {
-
-    final override var mediaCategory: MediaCategory? = MediaCategory.TV_SHOW
 
     @ManyToMany
     @JoinTable(

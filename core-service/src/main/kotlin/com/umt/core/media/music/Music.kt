@@ -29,6 +29,7 @@ class Music(
     var musicbrainzId: String,
 
 ) : MediaItem(
+    mediaCategory = MediaCategory.MUSIC,
     title = title,
     description = description,
     coverImageUrl = coverImageUrl,
@@ -40,8 +41,6 @@ class Music(
     ratingCount = ratingCount,
     franchiseId = franchiseId,
 ) {
-
-    final override var mediaCategory: MediaCategory? = MediaCategory.MUSIC
 
     @ManyToMany
     @JoinTable(

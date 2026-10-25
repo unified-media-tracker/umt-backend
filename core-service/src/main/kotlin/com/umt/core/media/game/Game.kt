@@ -29,6 +29,7 @@ class Game(
     var igdbId: String,
 
 ) : MediaItem(
+    mediaCategory = MediaCategory.GAME,
     title = title,
     description = description,
     coverImageUrl = coverImageUrl,
@@ -40,8 +41,6 @@ class Game(
     ratingCount = ratingCount,
     franchiseId = franchiseId,
 ) {
-
-    final override var mediaCategory: MediaCategory? = MediaCategory.GAME
 
     @ManyToMany
     @JoinTable(

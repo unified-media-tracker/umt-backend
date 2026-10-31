@@ -60,7 +60,7 @@ class GameImporterTest {
         every { mediaResponseAssembler.assemble(any<Game>()) } returns fixedResponse
     }
 
-    private fun existingGame(igdbId: String) = Game(id = UUID.randomUUID(), title = "Old title", igdbId = igdbId)
+    private fun existingGame(igdbId: String) = Game(title = "Old title", igdbId = igdbId).apply { this.id = UUID.randomUUID() }
 
     private fun igdbGame(id: Long = 1L, companies: List<IgdbInvolvedCompany> = emptyList()) = IgdbGame(
         id = id,

@@ -55,7 +55,8 @@ class MediaResponseAssemblerTest {
     private lateinit var assembler: MediaResponseAssembler
 
     private val movieId = UUID.randomUUID()
-    private val movie = Movie(id = movieId, title = "Inception", tmdbId = "27205")
+    private val movie = Movie(title = "Inception", tmdbId = "27205")
+        .apply { this.id = movieId }
     private val movieExtras = slot<ResponseExtras>()
 
     private fun movieResponse(id: UUID, title: String) = MovieResponse(
@@ -160,7 +161,8 @@ class MediaResponseAssemblerTest {
 
     @Test
     fun `assembleMovieList enriches every item from one batched query per table`() {
-        val other = Movie(id = UUID.randomUUID(), title = "Dune Part Three", tmdbId = "999")
+        val other = Movie(title = "Dune Part Three", tmdbId = "999")
+            .apply { this.id = UUID.randomUUID() }
         val (credit, contributorResponse) = nolanCredit(movieId)
         // Two snapshots for the same item, out of order - the newer one should win.
         val older = snapshot(movieId, MediaCategory.MOVIE, probability = 20, computedAt = Instant.parse("2026-09-01T00:00:00Z"))
@@ -201,7 +203,10 @@ class MediaResponseAssemblerTest {
             contributorMapper, creditRepository, rumorSnapshotRepository,
         )
 
-        val result = realAssembler.assemble(Movie(id = movieId, title = "Inception", tmdbId = "27205", runtimeMinutes = 148))
+        val result = realAssembler.assemble(
+            Movie(title = "Inception", tmdbId = "27205", runtimeMinutes = 148)
+                .apply { this.id = movieId }
+        )
 
         assertEquals(listOf(contributorResponse), result.contributors)
         assertEquals(BigDecimal.valueOf(9), result.latestDelayProbability)
@@ -215,7 +220,8 @@ class MediaResponseAssemblerTest {
     // covered above for movies.
     @Test
     fun `assembleGameList routes to the game mapper, not a copy-pasted sibling`() {
-        val game = Game(id = UUID.randomUUID(), title = "Half-Life 3", igdbId = "1")
+        val game = Game(title = "Half-Life 3", igdbId = "1")
+            .apply { this.id = UUID.randomUUID() }
         every { gameMapper.toResponse(game, any()) } returns GameResponse(
             id = game.id!!, mediaCategory = ApiMediaCategory.GAME, title = "Half-Life 3",
             releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
@@ -231,7 +237,8 @@ class MediaResponseAssemblerTest {
 
     @Test
     fun `assemble(TvShow) routes to the tv show mapper`() {
-        val tvShow = TvShow(id = UUID.randomUUID(), title = "Severance", tmdbId = "12345")
+        val tvShow = TvShow(title = "Severance", tmdbId = "12345")
+            .apply { this.id = UUID.randomUUID() }
         every { tvShowMapper.toResponse(tvShow, any()) } returns TvShowResponse(
             id = tvShow.id!!, mediaCategory = ApiMediaCategory.TV_SHOW, title = "Severance",
             releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
@@ -247,7 +254,8 @@ class MediaResponseAssemblerTest {
 
     @Test
     fun `assemble(Book) routes to the book mapper`() {
-        val book = Book(id = UUID.randomUUID(), title = "Project Hail Mary", hardcoverId = "abc")
+        val book = Book(title = "Project Hail Mary", hardcoverId = "abc")
+            .apply { this.id = UUID.randomUUID() }
         every { bookMapper.toResponse(book, any()) } returns BookResponse(
             id = book.id!!, mediaCategory = ApiMediaCategory.BOOK, title = "Project Hail Mary",
             releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,
@@ -263,7 +271,8 @@ class MediaResponseAssemblerTest {
 
     @Test
     fun `assemble(Music) routes to the music mapper`() {
-        val music = Music(id = UUID.randomUUID(), title = "In Rainbows", musicbrainzId = "xyz")
+        val music = Music(title = "In Rainbows", musicbrainzId = "xyz")
+            .apply { this.id = UUID.randomUUID() }
         every { musicMapper.toResponse(music, any()) } returns MusicResponse(
             id = music.id!!, mediaCategory = ApiMediaCategory.MUSIC, title = "In Rainbows",
             releaseDateStatus = ApiReleaseStatus.RELEASED, popularityScore = BigDecimal.ZERO,

@@ -57,7 +57,8 @@ class BookImporterTest {
         every { mediaResponseAssembler.assemble(any<Book>()) } returns fixedResponse
     }
 
-    private fun existingBook(hardcoverId: String) = Book(id = UUID.randomUUID(), title = "Old title", hardcoverId = hardcoverId)
+    private fun existingBook(hardcoverId: String) = Book(title = "Old title", hardcoverId = hardcoverId)
+        .apply { this.id = UUID.randomUUID() }
 
     private fun hardcoverBook(id: Long = 1L, contributions: List<HardcoverContribution> = emptyList()) = HardcoverBook(
         id = id, title = "Dune", description = null, slug = "dune",

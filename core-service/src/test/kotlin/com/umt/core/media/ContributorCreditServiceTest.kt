@@ -25,7 +25,8 @@ class ContributorCreditServiceTest {
     private lateinit var creditRepository: CreditRepository
     private lateinit var service: ContributorCreditService
 
-    private val mediaItem = Movie(id = UUID.randomUUID(), title = "Inception", tmdbId = "27205")
+    private val mediaItem = Movie(title = "Inception", tmdbId = "27205")
+        .apply { this.id = UUID.randomUUID() }
 
     @BeforeEach
     fun setUp() {

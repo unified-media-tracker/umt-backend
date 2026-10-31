@@ -68,7 +68,7 @@ class MusicImporterTest {
         every { mediaResponseAssembler.assemble(any<Music>()) } returns fixedResponse
     }
 
-    private fun existingMusic(musicbrainzId: String) = Music(id = UUID.randomUUID(), title = "The Bends", musicbrainzId = musicbrainzId)
+    private fun existingMusic(musicbrainzId: String) = Music(title = "The Bends", musicbrainzId = musicbrainzId).apply { this.id = UUID.randomUUID() }
 
     @Test
     fun `an already-known release (by title) is re-synced without ever calling MusicBrainz`() {

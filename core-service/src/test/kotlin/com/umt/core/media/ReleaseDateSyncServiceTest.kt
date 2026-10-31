@@ -61,7 +61,8 @@ class ReleaseDateSyncServiceTest {
         releaseDate: LocalDate?,
         status: ReleaseStatus = ReleaseStatus.ANNOUNCED,
         igdbId: String = "42",
-    ) = Game(id = UUID.randomUUID(), title = "Half-Life 3", releaseDate = releaseDate, releaseDateStatus = status, igdbId = igdbId)
+    ) = Game(title = "Half-Life 3", releaseDate = releaseDate, releaseDateStatus = status, igdbId = igdbId)
+        .apply { this.id = UUID.randomUUID() }
 
     @Nested
     @DisplayName("when nothing changed")
@@ -155,7 +156,8 @@ class ReleaseDateSyncServiceTest {
         // gameRepository.save) would only show up here, not in the game-only tests above.
         @Test
         fun `a movie change saves through the movie repository, not a copy-pasted sibling`() {
-            val existing = Movie(id = UUID.randomUUID(), title = "Dune Part Three", releaseDate = LocalDate.of(2026, 5, 1), tmdbId = "1")
+            val existing = Movie(title = "Dune Part Three", releaseDate = LocalDate.of(2026, 5, 1), tmdbId = "1")
+                .apply { this.id = UUID.randomUUID() }
 
             service.updateIfChanged(existing, LocalDate.of(2026, 9, 1), "TMDb")
 
@@ -250,9 +252,9 @@ class ReleaseDateSyncServiceTest {
         @Test
         fun `sweeps every table, not just one`() {
             val movie = Movie(
-                id = UUID.randomUUID(), title = "Old Movie", releaseDate = LocalDate.of(2026, 8, 1),
+                title = "Old Movie", releaseDate = LocalDate.of(2026, 8, 1),
                 releaseDateStatus = ReleaseStatus.CONFIRMED, tmdbId = "1",
-            )
+            ).apply { this.id = UUID.randomUUID() }
             every {
                 movieRepository.findByReleaseDateLessThanEqualAndReleaseDateStatusNot(today, ReleaseStatus.RELEASED)
             } returns listOf(movie)

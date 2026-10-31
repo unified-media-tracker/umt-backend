@@ -70,7 +70,7 @@ class TvShowImporterTest {
         every { mediaResponseAssembler.assemble(any<TvShow>()) } returns fixedResponse
     }
 
-    private fun existingTvShow(tmdbId: String) = TvShow(id = UUID.randomUUID(), title = "Old title", tmdbId = tmdbId)
+    private fun existingTvShow(tmdbId: String) = TvShow(title = "Old title", tmdbId = tmdbId).apply { this.id = UUID.randomUUID() }
 
     @Test
     fun `a brand-new show credits every creator as DIRECTOR`() {

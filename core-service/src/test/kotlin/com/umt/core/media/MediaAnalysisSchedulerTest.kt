@@ -44,7 +44,8 @@ class MediaAnalysisSchedulerTest {
     }
 
     private fun movie(title: String, releaseDate: LocalDate = LocalDate.of(2026, 10, 9)) =
-        Movie(id = UUID.randomUUID(), title = title, tmdbId = title, releaseDate = releaseDate)
+        Movie(title = title, tmdbId = title, releaseDate = releaseDate)
+            .apply { this.id = UUID.randomUUID() }
 
     private fun scored(movie: Movie, daysAgo: Long) = object : LatestAnalysis {
         override val mediaItemId = movie.id!!

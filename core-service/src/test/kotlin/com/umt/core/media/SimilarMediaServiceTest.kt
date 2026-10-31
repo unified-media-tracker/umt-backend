@@ -140,7 +140,7 @@ class SimilarMediaServiceTest {
         @Test
         fun `a known mediaCategory queries only that one table, not the other four`() {
             val id = UUID.randomUUID()
-            val book = Book(id = id, title = "Project Hail Mary", hardcoverId = "235")
+            val book = Book(title = "Project Hail Mary", hardcoverId = "235").apply { this.id = id }
             every { mediaMapper.toDomainMediaCategory(ApiMediaCategory.BOOK) } returns MediaCategory.BOOK
             every { bookRepository.findById(id) } returns Optional.of(book)
             every { hardcoverClient.fetchSimilarBookIds(235L) } returns emptyList()
@@ -183,9 +183,9 @@ class SimilarMediaServiceTest {
         @Test
         fun `resolves TMDb recommendation ids against our catalog, preserving TMDb's own order`() {
             val id = UUID.randomUUID()
-            val movie = Movie(id = id, title = "Dune: Part Three", tmdbId = "1")
-            val second = Movie(id = UUID.randomUUID(), title = "Arrival", tmdbId = "20")
-            val first = Movie(id = UUID.randomUUID(), title = "Blade Runner 2049", tmdbId = "10")
+            val movie = Movie(title = "Dune: Part Three", tmdbId = "1").apply { this.id = id }
+            val second = Movie(title = "Arrival", tmdbId = "20").apply { this.id = UUID.randomUUID() }
+            val first = Movie(title = "Blade Runner 2049", tmdbId = "10").apply { this.id = UUID.randomUUID() }
             every { movieRepository.findById(id) } returns Optional.of(movie)
             // TMDb ranks 10 first, then an id we don't have (15), then 20.
             every { tmdbClient.fetchMovieRecommendationIds(1L) } returns listOf(10L, 15L, 20L)
@@ -200,9 +200,11 @@ class SimilarMediaServiceTest {
         @Test
         fun `caps results at SIMILAR_MEDIA_LIMIT even when every candidate matches`() {
             val id = UUID.randomUUID()
-            val movie = Movie(id = id, title = "Dune: Part Three", tmdbId = "1")
+            val movie = Movie(title = "Dune: Part Three", tmdbId = "1").apply { this.id = id }
             val candidateIds = (1..15L).map { it + 100 }
-            val known = candidateIds.map { Movie(id = UUID.randomUUID(), title = "Movie $it", tmdbId = it.toString()) }
+            val known = candidateIds.map {
+                Movie(title = "Movie $it", tmdbId = it.toString()).apply { this.id = UUID.randomUUID() }
+            }
             every { movieRepository.findById(id) } returns Optional.of(movie)
             every { tmdbClient.fetchMovieRecommendationIds(1L) } returns candidateIds
             every { movieRepository.findByTmdbIdIn(candidateIds.map { it.toString() }) } returns known
@@ -215,7 +217,7 @@ class SimilarMediaServiceTest {
         @Test
         fun `no matches in our catalog is an empty list, not an error`() {
             val id = UUID.randomUUID()
-            val movie = Movie(id = id, title = "Dune: Part Three", tmdbId = "1")
+            val movie = Movie(title = "Dune: Part Three", tmdbId = "1").apply { this.id = id }
             every { movieRepository.findById(id) } returns Optional.of(movie)
             every { tmdbClient.fetchMovieRecommendationIds(1L) } returns listOf(999L)
             every { movieRepository.findByTmdbIdIn(listOf("999")) } returns emptyList()
@@ -231,7 +233,8 @@ class SimilarMediaServiceTest {
         private val artist = "artist-src"
         private val source = album("Source")
 
-        private fun album(title: String) = Music(id = UUID.randomUUID(), title = title, musicbrainzId = "mb-$title")
+        private fun album(title: String) = Music(title = title, musicbrainzId = "mb-$title")
+            .apply { this.id = UUID.randomUUID() }
 
         private fun credit(albumId: UUID, artistMbid: String, role: RoleType = RoleType.ARTIST, source: ExternalSourceType = ExternalSourceType.MUSICBRAINZ) =
             Credit(
@@ -351,8 +354,8 @@ class SimilarMediaServiceTest {
         @Test
         fun `a tv show uses TMDb's recommendations, not the movie client call`() {
             val id = UUID.randomUUID()
-            val show = TvShow(id = id, title = "Severance", tmdbId = "5")
-            val match = TvShow(id = UUID.randomUUID(), title = "Silo", tmdbId = "6")
+            val show = TvShow(title = "Severance", tmdbId = "5").apply { this.id = id }
+            val match = TvShow(title = "Silo", tmdbId = "6").apply { this.id = UUID.randomUUID() }
             every { tvShowRepository.findById(id) } returns Optional.of(show)
             every { movieRepository.findById(id) } returns Optional.empty()
             every { tmdbClient.fetchTvRecommendationIds(5L) } returns listOf(6L)
@@ -366,8 +369,8 @@ class SimilarMediaServiceTest {
         @Test
         fun `a game uses IGDB's similar_games, not TMDb`() {
             val id = UUID.randomUUID()
-            val game = Game(id = id, title = "Half-Life 3", igdbId = "1942")
-            val match = Game(id = UUID.randomUUID(), title = "Portal 3", igdbId = "478")
+            val game = Game(title = "Half-Life 3", igdbId = "1942").apply { this.id = id }
+            val match = Game(title = "Portal 3", igdbId = "478").apply { this.id = UUID.randomUUID() }
             every { movieRepository.findById(id) } returns Optional.empty()
             every { tvShowRepository.findById(id) } returns Optional.empty()
             every { gameRepository.findById(id) } returns Optional.of(game)
@@ -382,8 +385,8 @@ class SimilarMediaServiceTest {
         @Test
         fun `a book uses Hardcover's cached_similar_book_ids`() {
             val id = UUID.randomUUID()
-            val book = Book(id = id, title = "Project Hail Mary", hardcoverId = "235")
-            val match = Book(id = UUID.randomUUID(), title = "The Martian", hardcoverId = "58358")
+            val book = Book(title = "Project Hail Mary", hardcoverId = "235").apply { this.id = id }
+            val match = Book(title = "The Martian", hardcoverId = "58358").apply { this.id = UUID.randomUUID() }
             every { movieRepository.findById(id) } returns Optional.empty()
             every { tvShowRepository.findById(id) } returns Optional.empty()
             every { gameRepository.findById(id) } returns Optional.empty()
